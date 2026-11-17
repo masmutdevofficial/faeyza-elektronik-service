@@ -81,4 +81,5 @@ Status deployment: COMPLETE. Kedua container healthy, admin login/logout/login u
 - [x] Tombol mata MDI lokal untuk login admin/pelanggan dan dua kolom registrasi; default hide, tidak submit, reset saat pageshow/pagehide.
 - [x] Basis URL/aset kompatibel dengan direktori aplikasi dan pemisah path Windows/Linux.
 - [x] Regresi 203 native/HTTP PASS setelah perbaikan path Windows.
-- [ ] Pemeriksaan browser, rilis, dan verifikasi produksi.
+- [x] 120 browser + 9 tata letak PASS; rilis runtime 7870e1c ke resource Faeyza.
+- [x] Produksi 40 HTTP + 22 browser PASS, termasuk login/logout admin aktual dan ketiga halaman pada 375/768/1440px.

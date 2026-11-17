@@ -120,3 +120,9 @@ Pembaruan berikutnya: runtime 64dc7c9723d9386709899234dcab9f09c78381cc membawa k
 Runtime ad00792136c6e20452d56eac45cd5e2dd9696f84 dirilis melalui Chrome profil Imam ke resource Faeyza yang sama. Deployment ivakvdcmcd0wlrpuchclzw6q Success dalam 37 detik. Admin dapat mengganti nomor unik/password sendiri dan mereset password pelanggan; pelanggan dapat mengganti password sendiri. Minimum enam karakter konsisten pada UI/backend/CLI.
 
 Tidak ada migrasi atau perubahan compose/database/volume/kredensial produksi. Stamp sesi yang terikat pada kredensial mencabut sesi lama; pengguna versi sebelumnya perlu login kembali sekali, tanpa perubahan password. Admin produksi berhasil login ulang dengan kredensial yang sama, membuka Akun serta form reset Indra. Tidak ada perubahan kredensial produksi yang dikirim untuk pengujian. Local 186 native/HTTP + 90 browser PASS; produksi 34 HTTP + 14 browser PASS, 0 FAIL. Bukti dan batas verifikasi pada TEST_REPORT.md.
+
+## Login admin /admin dan tombol password
+
+Runtime 7870e1cf12efd551410562bda61fe20e7114f30c dirilis manual melalui profil Imam ke resource Faeyza yang sama. Deployment slm1k1prlfr1g6qj5egzvcot Success dalam 29 detik. Entry public/admin/index.php bekerja dengan DirectoryIndex Apache tanpa perubahan konfigurasi/mod_rewrite; /admin diteruskan ke /admin/. Pelanggan tetap memakai index.php?page=login. Login memverifikasi role dan logout admin kembali ke /admin/.
+
+Toggle mata MDI lokal pada login admin, login pelanggan, password dan konfirmasi registrasi telah dioperasikan di domain HTTPS. Default/reload tersembunyi, tampil/sembunyi mandiri dan tidak submit. Login/logout admin aktual lulus. Produksi 40 HTTP + 22 browser PASS, termasuk viewport 375/768/1440, tanpa console error. Lokal 203 native/HTTP + 120 browser + 9 tata letak PASS. Tidak ada migrasi, perubahan data pesanan/kredensial, compose, volume atau resource aplikasi lain. Bukti pada TEST_REPORT.md.
