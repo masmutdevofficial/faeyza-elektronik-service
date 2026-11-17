@@ -3,6 +3,7 @@ FROM php:8.4-apache-bookworm
 RUN apt-get update \
     && apt-get install -y --no-install-recommends libonig-dev \
     && docker-php-ext-install -j2 mysqli mbstring opcache \
+    && a2enmod remoteip \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /var/www/html

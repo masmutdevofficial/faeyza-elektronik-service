@@ -12,6 +12,8 @@ Repository: https://github.com/masmutdevofficial/faeyza-elektronik-service (priv
 - Secret `SERVICE_PASSWORD_FAEYZADB` dan `SERVICE_PASSWORD_FAEYZAROOT` dibuat dan disimpan Coolify; jangan salin nilainya ke Git atau screenshot.
 - Volume `faeyza-storage` menyimpan session/log aplikasi. Batas runtime web 256 MiB/0.5 CPU; database 384 MiB/0.5 CPU. Build memakai `-j2` untuk mengurangi beban kompilasi.
 - Domain HTTPS diarahkan hanya ke service `web` port internal 80; database tidak mempunyai domain atau publikasi port.
+- Domain yang diminta pemilik: **https://faeyza.dirgasatya.id**. Jangan mengubah DNS/domain aplikasi lain.
+- Apache hanya mempercayai X-Forwarded-For dari alamat `coolify-proxy` yang di-resolve melalui Docker DNS jaringan resource saat startup. Ini menjaga rate limit dari penggabungan semua login ke IP proxy. Tidak mempercayai header IP sembarang dari client.
 
 ## Inisialisasi dan admin
 
