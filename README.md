@@ -155,6 +155,10 @@ Riwayat hasil aktual dan batas verifikasi tersedia di TEST_REPORT.md. Pengujian 
 
 ## Pengaturan akun dan password
 
+Login admin menggunakan **/admin** (Apache meneruskan ke /admin/), sedangkan login pelanggan tetap **index.php?page=login**. Akun admin hanya dapat login melalui formulir admin dan akun pelanggan melalui formulir pelanggan. Endpoint administrasi untuk tamu serta logout admin mengarah ke /admin/. Tidak ada registrasi admin publik. Folder public/admin harus ikut disalin saat deployment, termasuk pada XAMPP/shared hosting; fitur ini tidak membutuhkan mod_rewrite. Aset dan tautan mengikuti direktori aplikasi.
+
+Login admin, login pelanggan, dan kedua kolom password registrasi memiliki tombol mata MDI untuk tampilkan/sembunyikan password. Default tersembunyi; masing-masing tombol bekerja mandiri dan tidak mengirim formulir. Reload atau kembali ke halaman mengembalikan kondisi tersembunyi.
+
 - Admin: buka **Akun** di navigasi. Nomor HP sendiri dapat diganti dengan verifikasi password saat ini. Nomor dinormalisasi ke 62 dan harus unik di seluruh akun, termasuk konsumen.
 - Admin mengganti password pelanggan: **Konsumen → detail pelanggan → Ganti password**. Masukkan password admin saat ini, password baru pelanggan, dan konfirmasinya. Nomor akun, pemilik invoice, dan riwayat servis tetap sama.
 - Pelanggan: buka ikon roda gigi **Pengaturan akun** di header untuk mengganti password sendiri dengan password saat ini dan konfirmasi password baru.

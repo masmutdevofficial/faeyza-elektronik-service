@@ -3,16 +3,17 @@
 export async function runBrowserE2E({tab,viewport,fixture,save,base='http://127.0.0.1:8081/'}) {
   const results=[]; const metrics=[];
   const check=(name,ok)=>{results.push({name,status:ok?'PASS':'FAIL'});if(!ok)throw new Error(name);};
-  const goto=page=>tab.goto(base+'index.php?page='+page);
+  const goto=page=>tab.goto(base+(page==='admin-login'?'admin/':'index.php?page='+page));
   const text=selector=>tab.playwright.locator(selector).innerText();
   const currentUrl=()=>tab.playwright.evaluate(()=>location.href);
   const fill=(name,value)=>tab.playwright.locator('[name="'+name+'"]').fill(value);
   const click=async name=>{
     const action=()=>tab.playwright.getByRole('button',{name,exact:true}).click();
     if(name==='Buka navigasi'||name==='Tutup navigasi')return action();
+    const adminLogout=name==='Keluar'&&await tab.playwright.evaluate(()=>document.body.classList.contains('admin-body'));
     await tab.playwright.expectNavigation(action,{waitUntil:'domcontentloaded'});
     const expected=({'Buat akun':'dashboard','Masuk':'dashboard','Keluar':'login'})[name];
-    if(expected)await tab.playwright.waitForURL(base+'index.php?page='+expected,{waitUntil:'domcontentloaded'});
+    if(expected)await tab.playwright.waitForURL(adminLogout?base+'admin/':base+'index.php?page='+expected,{waitUntil:'domcontentloaded'});
     await tab.ax.get();
   };
   const link=name=>tab.playwright.expectNavigation(()=>tab.playwright.getByRole('link',{name,exact:true}).click(),{waitUntil:'domcontentloaded'});
@@ -27,10 +28,30 @@ export async function runBrowserE2E({tab,viewport,fixture,save,base='http://127.
     const m=await tab.playwright.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth}));
     metrics.push({route,requested:width,...m});check('12 '+route+' '+width+'px tanpa overflow',m.width===width&&m.scroll<=m.width);
   };
-  const login=async phone=>{await fill('phone',phone);await fill('password',fixture.password);await click('Masuk');};
+  const login=async phone=>{await goto(phone===fixture.admin_phone?'admin-login':'login');await fill('phone',phone);await fill('password',fixture.password);await click('Masuk');};
   try {
     await size(1440); await goto('dashboard');
     if(await tab.playwright.locator('.logout').count())await click('Keluar');
+    for(const [route,heading,count] of [['admin-login','Masuk admin',1],['login','Masuk',1],['register','Daftar akun',2]]) {
+      await goto(route);
+      check('19 '+route+' heading benar',(await text('h1'))===heading);
+      check('19 '+route+' password tersembunyi sejak awal',await tab.playwright.evaluate(expected=>document.querySelectorAll('[data-password-toggle]').length===expected&&[...document.querySelectorAll('.password-control input')].every(input=>input.type==='password'),count));
+      await tab.playwright.getByRole('button',{name:'Tampilkan password',exact:true}).click();
+      check('19 '+route+' tampilkan password tanpa submit',await tab.playwright.evaluate(()=>document.querySelector('[name="password"]').type==='text'&&document.querySelector('[aria-controls="auth-password"]').getAttribute('aria-pressed')==='true')&&(await currentUrl()).includes(route==='admin-login'?'/admin/':'page='+route));
+      await tab.playwright.getByRole('button',{name:'Sembunyikan password',exact:true}).click();
+      check('19 '+route+' sembunyikan password kembali',await tab.playwright.evaluate(()=>document.querySelector('[name="password"]').type==='password'&&document.querySelector('[aria-controls="auth-password"]').getAttribute('aria-pressed')==='false'));
+      if(route==='register') {
+        await tab.playwright.getByRole('button',{name:'Tampilkan konfirmasi password',exact:true}).click();
+        check('19 toggle konfirmasi berdiri sendiri',await tab.playwright.evaluate(()=>document.querySelector('[name="password_confirm"]').type==='text'&&document.querySelector('[name="password"]').type==='password'));
+        await tab.playwright.getByRole('button',{name:'Sembunyikan konfirmasi password',exact:true}).click();
+        check('19 konfirmasi kembali tersembunyi',await tab.playwright.evaluate(()=>document.querySelector('[name="password_confirm"]').type==='password'));
+      }
+      check('19 '+route+' logo CSS dan ikon lokal termuat',await tab.playwright.evaluate(()=>document.querySelector('.brand img').naturalWidth>0&&getComputedStyle(document.querySelector('[data-password-toggle]')).position==='absolute'&&document.querySelector('[data-mdi="eye-outline"] path')!==null));
+      await tab.playwright.getByRole('button',{name:'Tampilkan password',exact:true}).click();await tab.reload();
+      check('19 '+route+' reload kembali tersembunyi',await tab.playwright.evaluate(()=>document.querySelector('[name="password"]').type==='password'));
+      if(route==='admin-login')check('19 admin tidak memiliki tautan daftar',await tab.playwright.getByRole('link',{name:'Daftar',exact:true}).count()===0);
+      for(const width of [375,768,1440]){await responsive(route,width);if(width===375)await save(route+'-mobile.jpg');}
+    }
     await goto('register');
     const phone='0857'+String(Date.now()).slice(-8);
     await fill('name','Rina Simulasi');await fill('address','Jl. Simulasi No. 17, Jakarta');await fill('phone',phone);await fill('password',fixture.password);await fill('password_confirm',fixture.password);await click('Buat akun');

@@ -14,7 +14,13 @@ function mdi(string $name, string $extraClass = ''): string {
     return '<svg class="mdi-icon'.($extraClass!==''?' '.e($extraClass):'').'" data-mdi="'.e($name).'" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="'.e($paths[$name]).'"></path></svg>';
 }
 function brand(): array { static $b; return $b ??= require ROOT.'/config/branding.php'; }
-function url(string $page = 'dashboard', array $params = []): string { return 'index.php?'.http_build_query(['page'=>$page]+$params); }
+function app_base(): string {
+    if (PHP_SAPI==='cli') return '/';
+    $directory=dirname(str_replace('\\','/',$_SERVER['SCRIPT_NAME']??'/index.php'));
+    if (defined('ADMIN_ENTRY')) $directory=dirname($directory);
+    return rtrim(str_replace('\\','/',$directory),'/.').'/';
+}
+function url(string $page = 'dashboard', array $params = []): string { return app_base().($page==='admin-login'?'admin/':'index.php?'.http_build_query(['page'=>$page]+$params)); }
 function redirect(string $page, array $params = []): never { header('Location: '.url($page,$params), true, 303); exit; }
 function csrf(): string { return '<input type="hidden" name="csrf" value="'.e($_SESSION['csrf']).'">'; }
 function token(): string { return bin2hex(random_bytes(32)); }
@@ -34,8 +40,8 @@ function current_user(): ?array {
     unset($user['password_hash']); return $user;
 }
 function sign_in(array $user): void { session_regenerate_id(true); $_SESSION=['user_id'=>$user['id'],'auth_stamp'=>Auth::stamp($user),'csrf'=>token(),'last_seen'=>time()]; }
-function require_login(): array { $u=current_user(); if (!$u) redirect('login'); return $u; }
-function require_admin(): array { $u=require_login(); if ($u['role']!=='admin') abort_page(403); return $u; }
+function require_login(string $loginPage='login'): array { $u=current_user(); if (!$u) redirect($loginPage); return $u; }
+function require_admin(): array { $u=require_login('admin-login'); if ($u['role']!=='admin') abort_page(403); return $u; }
 function abort_page(int $status): never {
     http_response_code($status);
     // Apache needs an explicit reason phrase for this non-standard expiry code.

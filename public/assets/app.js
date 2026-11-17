@@ -9,7 +9,30 @@ document.querySelectorAll('form').forEach(form => {
     });
   });
 });
+const hidePasswords = () => document.querySelectorAll('[data-password-toggle]').forEach(button => {
+  const input = document.getElementById(button.getAttribute('aria-controls'));
+  if (!input) return;
+  input.type = 'password';
+  button.setAttribute('aria-pressed', 'false');
+  button.setAttribute('aria-label', 'Tampilkan ' + button.dataset.passwordLabel);
+  button.title = button.getAttribute('aria-label');
+  button.querySelector('[data-password-show]').hidden = false;
+  button.querySelector('[data-password-hide]').hidden = true;
+});
+document.querySelectorAll('[data-password-toggle]').forEach(button => button.addEventListener('click', () => {
+  const input = document.getElementById(button.getAttribute('aria-controls'));
+  if (!input) return;
+  const show = input.type === 'password';
+  input.type = show ? 'text' : 'password';
+  button.setAttribute('aria-pressed', String(show));
+  button.setAttribute('aria-label', (show ? 'Sembunyikan ' : 'Tampilkan ') + button.dataset.passwordLabel);
+  button.title = button.getAttribute('aria-label');
+  button.querySelector('[data-password-show]').hidden = show;
+  button.querySelector('[data-password-hide]').hidden = !show;
+}));
+window.addEventListener('pagehide', hidePasswords);
 window.addEventListener('pageshow', () => {
+  hidePasswords();
   document.querySelectorAll('button[data-original-html]').forEach(button => {
     button.disabled = false; button.innerHTML = button.dataset.originalHtml;
     button.removeAttribute('aria-busy');

@@ -41,7 +41,7 @@ check($staleAccount->request('account')['code']===303,'18 sesi pelanggan lain di
 check(password_verify($nextSix,Database::one('SELECT password_hash FROM users WHERE id=?',[$accountCustomerId])['password_hash']) && password_verify($accountAdminPassword,Database::one('SELECT password_hash FROM users WHERE id=?',[$accountAdmin['id']])['password_hash']) && Database::one('SELECT role FROM users WHERE id=?',[$accountCustomerId])['role']==='customer','18 manipulasi ID dan role tidak mengganti akun lain');
 $checkLogin=new HttpClient();
 check($checkLogin->login('081234500002',$six)['code']===422 && $checkLogin->login('081234500002',$nextSix)['code']===303,'18 password lama ditolak dan password baru diterima');
-check($adminAccount->login('081234500001',$accountAdminPassword)['code']===303 && $staleAdmin->login('081234500001',$accountAdminPassword)['code']===303,'18 dua sesi admin login untuk pengujian pengaturan');
+check($adminAccount->login('081234500001',$accountAdminPassword,true)['code']===303 && $staleAdmin->login('081234500001',$accountAdminPassword,true)['code']===303,'18 dua sesi admin login untuk pengujian pengaturan');
 $adminAccountPage=$adminAccount->request('account');
 check($adminAccountPage['code']===200 && str_contains($adminAccountPage['body'],'Simpan nomor HP'),'18 admin dapat membuka pengaturan nomor sendiri');
 Database::query('DELETE FROM login_limits');
@@ -59,7 +59,7 @@ check($phoneChange['code']===303 && str_contains($adminAccount->request('account
 check($staleAdmin->request('account')['code']===303,'18 sesi admin lain dicabut setelah nomor berubah');
 Database::query('DELETE FROM login_limits');
 $adminReLogin=new HttpClient();
-check($adminReLogin->login('081234500001',$accountAdminPassword)['code']===422 && $adminReLogin->login('+6281234500004',$accountAdminPassword)['code']===303,'18 login admin memakai nomor baru saja');
+check($adminReLogin->login('081234500001',$accountAdminPassword,true)['code']===422 && $adminReLogin->login('+6281234500004',$accountAdminPassword,true)['code']===303,'18 login admin memakai nomor baru saja');
 $resetData=['csrf'=>$adminAccount->form('customer-password',['id'=>$accountProfile['id']]),'current_password'=>$accountAdminPassword,'new_password'=>$resetSix,'password_confirm'=>$resetSix];
 check($adminAccount->request('customer-password','POST',array_replace($resetData,['csrf'=>'invalid']),['id'=>$accountProfile['id']])['code']===419,'18 reset pelanggan tanpa CSRF ditolak');
 check($adminAccount->request('customer-password','POST',array_replace($resetData,['current_password'=>'salah123']),['id'=>$accountProfile['id']])['code']===422,'18 reset pelanggan meminta password admin');
@@ -76,5 +76,5 @@ $ownAdminChange=['action'=>'password','csrf'=>$adminAccount->form('account'),'cu
 check($adminAccount->request('account','POST',$ownAdminChange)['code']===303 && $adminAccount->request('account')['code']===200,'18 admin dapat mengganti password sendiri menjadi enam karakter');
 check($adminReLogin->request('account')['code']===303,'18 perubahan password admin mencabut sesi admin lain');
 $lastLogin=new HttpClient();
-check($lastLogin->login('081234500004',$accountAdminPassword)['code']===422 && $lastLogin->login('081234500004',$nextSix)['code']===303,'18 password admin baru dapat digunakan dan yang lama ditolak');
+check($lastLogin->login('081234500004',$accountAdminPassword,true)['code']===422 && $lastLogin->login('081234500004',$nextSix,true)['code']===303,'18 password admin baru dapat digunakan dan yang lama ditolak');
 Database::query('DELETE FROM login_limits');

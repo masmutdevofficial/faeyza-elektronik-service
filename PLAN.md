@@ -74,3 +74,11 @@ Status deployment: COMPLETE. Kedua container healthy, admin login/logout/login u
 - [x] Regresi 186 native/HTTP PASS pada database testing terpisah, termasuk rehash login dan pembaruan sesi atomik.
 - [x] Regresi 90 browser PASS, termasuk seluruh halaman baru pada 375/768/1440px.
 - [x] Rilis runtime ad00792 ke resource Faeyza; produksi 34 HTTP + 14 browser PASS, tanpa perubahan kredensial produksi.
+
+## Login admin terpisah dan toggle password
+
+- [x] Entry point /admin, login role-specific, logout/redirect sesuai role, tanpa registrasi admin publik.
+- [x] Tombol mata MDI lokal untuk login admin/pelanggan dan dua kolom registrasi; default hide, tidak submit, reset saat pageshow/pagehide.
+- [x] Basis URL/aset kompatibel dengan direktori aplikasi dan pemisah path Windows/Linux.
+- [x] Regresi 203 native/HTTP PASS setelah perbaikan path Windows.
+- [ ] Pemeriksaan browser, rilis, dan verifikasi produksi.

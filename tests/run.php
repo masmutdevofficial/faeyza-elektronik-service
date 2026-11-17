@@ -25,8 +25,11 @@ final class HttpClient {
     public function __construct(){ $this->cookie=tempnam(sys_get_temp_dir(),'faeyza_'); }
     public function __destruct(){ if(is_file($this->cookie))unlink($this->cookie); }
     public function request(string $page,string $method='GET',array $data=[],array $params=[]): array {
+        return $this->requestPath($page==='admin-login'?'admin/':'index.php?'.http_build_query(['page'=>$page]+$params),$method,$data);
+    }
+    public function requestPath(string $path,string $method='GET',array $data=[]): array {
         $base=getenv('TEST_BASE_URL')?:'http://127.0.0.1:8081/';
-        $h=curl_init($base.'index.php?'.http_build_query(['page'=>$page]+$params));
+        $h=curl_init($base.ltrim($path,'/'));
         curl_setopt_array($h,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_HEADER=>true,CURLOPT_COOKIEJAR=>$this->cookie,CURLOPT_COOKIEFILE=>$this->cookie,CURLOPT_FOLLOWLOCATION=>false,CURLOPT_TIMEOUT=>15]);
         if($method==='POST')curl_setopt_array($h,[CURLOPT_POST=>true,CURLOPT_POSTFIELDS=>http_build_query($data)]);
         $raw=curl_exec($h); if($raw===false) throw new RuntimeException(curl_error($h));
@@ -36,7 +39,7 @@ final class HttpClient {
     public function form(string $page,array $params=[]): string {
         $r=$this->request($page,'GET',[],$params); if(!preg_match('/name="csrf" value="([a-f0-9]+)"/',$r['body'],$m))throw new RuntimeException('CSRF token tidak ada di '.$page.' ('.$r['code'].')'); return $m[1];
     }
-    public function login(string $phone,string $password): array { return $this->request('login','POST',['csrf'=>$this->form('login'),'phone'=>$phone,'password'=>$password]); }
+    public function login(string $phone,string $password,bool $admin=false): array { $page=$admin?'admin-login':'login'; return $this->request($page,'POST',['csrf'=>$this->form($page),'phone'=>$phone,'password'=>$password]); }
 }
 try {
     $password=bin2hex(random_bytes(12));
@@ -187,7 +190,7 @@ try {
     check(str_contains($invoice['body'],'&lt;script&gt;') && !str_contains($invoice['body'],$malicious),'11 invoice tidak mengeksekusi stored XSS');
     check(str_contains($invoice['body'],'assets/print.css') && str_contains($invoice['body'],'data-print') && !str_contains($invoice['body'],'class="sidebar"'),'10 invoice tanpa navigasi dan tombol cetak tersedia');
     $beforeRefresh=stock($part);$http->request('order','GET',[],['id'=>$webOrder]);$http->request('order','GET',[],['id'=>$webOrder]);check(stock($part)===$beforeRefresh,'07 refresh detail tidak mengurangi stok');
-    check($adminHttp->login('08170002466',$password)['code']===303,'01 login HTTP admin');
+    check($adminHttp->login('08170002466',$password,true)['code']===303,'01 login HTTP admin');
     foreach(['dashboard','orders','invoices','customers','parts','customer-new','part-new','service-new']as $endpoint)check($adminHttp->request($endpoint)['code']===200,'09 halaman admin '.$endpoint.' bekerja');
     $contextLink=e(url('service-new',['customer_id'=>$bProfile['id']]));
     check(str_contains($adminHttp->request('customer','GET',[],['id'=>$bProfile['id']])['body'],$contextLink),'17 servis baru dari riwayat berisi membawa ID konsumen');
@@ -243,6 +246,7 @@ try {
     $custom=Orders::create(fixture(['item_name'=>'Lainnya','item_name_custom'=>'Mesin kopi','brand'=>'Lainnya','brand_custom'=>'Merek uji','accessories'=>['Remote','Lainnya'],'accessories_custom'=>'Tas perangkat']),$a);
     check(Orders::get($custom,$a)['item_name']==='Mesin kopi' && str_contains(Orders::get($custom,$a)['accessories'],'Tas perangkat'),'02 barang merk kelengkapan custom berfungsi');
     require __DIR__.'/accounts.php';
+    require __DIR__.'/auth-pages.php';
     // Fixture untuk browser: hanya testing, password acak tidak ditulis ke laporan.
     Database::query('DELETE FROM login_limits');
     file_put_contents(__DIR__.'/local-fixtures.json',json_encode(['password'=>$password,'admin_phone'=>'08170002466','customer_phone'=>'081822233344','other_phone'=>'081911122233','own_order'=>$webOrder,'other_order'=>$ob,'part'=>$part],JSON_PRETTY_PRINT));

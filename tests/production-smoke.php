@@ -55,6 +55,14 @@ try {
     verify(http('/index.php?page=customer-password&id=1')['status']===303,'Customer password reset requires login');
     $register=http('/index.php?page=register');
     verify($register['status']===200 && substr_count($register['body'],'minlength="6"')===2,'Registration uses six-character minimum');
+    $adminEntry=http('/admin');
+    verify($adminEntry['status']===200 || (in_array($adminEntry['status'],[301,302,303,307,308],true)&&preg_match('~Location: (?:https?://[^/]+)?/admin/\r?$~mi',$adminEntry['headers'])),'Admin short URL resolves to dedicated login');
+    $adminPage=http('/admin/');
+    verify($adminPage['status']===200 && str_contains($adminPage['body'],'<h1>Masuk admin</h1>') && str_contains($adminPage['body'],'action="/admin/"'),'Dedicated admin login is served');
+    verify(!str_contains($adminPage['body'],'auth-switch') && str_contains($adminPage['body'],'<base href="/">'),'Admin login has correct assets base and no registration');
+    verify(http('/admin/','POST',['phone'=>'invalid','password'=>'invalid'])['status']===419,'Admin login requires CSRF');
+    verify(substr_count($register['body'],'data-password-toggle')===2 && substr_count($body,'data-password-toggle')===1 && substr_count($adminPage['body'],'data-password-toggle')===1,'Password toggles exist on both logins and registration');
+    verify(http('/assets/icons/mdi/eye-outline.svg')['status']===200 && http('/assets/icons/mdi/eye-off-outline.svg')['status']===200,'Local password visibility icons available');
 } catch(Throwable $e) { verify(false,$e->getMessage()); }
 finally { if(is_file($cookie))unlink($cookie); }
 $failed=count(array_filter($results,fn($r)=>$r['status']==='FAIL'));
