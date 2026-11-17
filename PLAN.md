@@ -35,4 +35,4 @@ Status deployment: COMPLETE. Kedua container healthy, admin login/logout/login u
 - [x] Form perangkat didahulukan; kontak terisi otomatis, field opsional dilipat, tombol kirim tetap terjangkau.
 - [x] Validasi membuka bagian kontak yang invalid; menu admin dapat ditutup dengan Escape.
 - [x] Regresi 111 native/HTTP dan 56 pemeriksaan browser lulus, termasuk simulasi bisnis dan viewport 375/768/1440.
-- [ ] Rilis UI ke resource Coolify Faeyza dan verifikasi produksi.
+- [x] Rilis UI ke resource Coolify Faeyza dan verifikasi produksi: f6d9ea1, HTTP 30/30 PASS, antrean baru dan empty state diperiksa di domain aktif.

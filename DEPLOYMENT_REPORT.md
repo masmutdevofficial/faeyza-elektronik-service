@@ -9,7 +9,7 @@
 - Project UUID: `a0yuccdnmbmxcqiogeuoq2v7`.
 - Environment UUID: `tpelhtw4jiayh6clerrnseli`.
 - Application UUID: `usuqy7yd16bjf9olu6nn7cys`.
-- Runtime source commit: `1694fef1a63293cdeaa967ab9883ceb4097aac7c`.
+- Runtime source commit: `f6d9ea1bbec02ad76e156ad594dc7538b66fca7d` (UI ringkas).
 - Build strategy: GitHub App + Docker Compose. Deployment berikutnya **manual**; push dokumentasi tidak merestart container.
 - Pengoperasian Coolify dilakukan melalui Chrome profil **Imam**, sesuai permintaan pemilik.
 
@@ -29,7 +29,19 @@ Admin produksi **08170002466** dibuat setelah persetujuan pemilik, memakai passw
 
 Login, logout, pengakhiran sesi, penolakan akses sesudah logout, dan login ulang admin berhasil. Database produksi berisi **1 user admin, 0 konsumen, 0 servis** saat pemeriksaan akhir. Akun demo dan data simulasi development tidak disalin. Secret database dibuat/disimpan Coolify dan tidak dimasukkan ke repository/laporan.
 
-## Hasil aktual
+## Pembaruan UI ringkas
+
+Slogan, paragraf promosi, ilustrasi banner, dan keterangan teknis yang tidak diperlukan sudah dihapus dari halaman aplikasi. Admin memakai antrean konfirmasi, angka ringkasan, tabel servis, dan akses stok/invoice. Pelanggan memakai navigasi Beranda / Servis baru / Invoice serta kartu perangkat dan status.
+
+Form pelanggan langsung meminta perangkat dan keluhan. Nama, nomor HP, alamat, dan tanggal masuk terisi dari akun/server, dengan bagian kontak yang dapat dibuka. Serial, kelengkapan, dan catatan bersifat opsional dan dilipat. Pada mobile, empat isian pendek memakai dua kolom; tombol kirim tetap terjangkau. Kontak yang invalid otomatis terbuka saat validasi. Seluruh field dan otorisasi server tetap berlaku.
+
+Verifikasi revisi ini: **111 native/HTTP PASS, 56 browser PASS, 30 HTTP produksi PASS, 0 FAIL**. Simulasi bisnis lengkap dijalankan ulang pada DB testing. Tiga pemeriksaan baru menguji kontak terisi/lipat, field opsional, serta pembukaan otomatis kontak invalid. Ukuran 375/768/1440 px diperiksa. Perbaikan lanjutan mencegah filter kartu statistik mengubah pesan empty state; render kosong dan halaman produksi sama-sama menampilkan “Belum ada servis”.
+
+Rilis UI melalui Coolify selesai dan sukses. Session admin bertahan sesudah redeploy. Verifikasi halaman produksi: antrean baru terlihat, banner promosi tidak ada, MDI masih digunakan, dan lebar dokumen 1440 px sesuai viewport 1440 px. Tidak ada migrasi atau perubahan skema/volume database pada revisi ini.
+
+Bukti lokal tambahan: `tests/artifacts/minimal-browser-results.json`, `production-smoke-results.json`, `minimal-live-checks.json`, `minimal-production-admin-1440.png`, `minimal-customer-dashboard-375.png`, dan `minimal-service-form-mobile.png`.
+
+## Hasil deployment awal
 
 | Pemeriksaan | PASS | FAIL | BLOCKED | Bukti |
 | --- | ---: | ---: | ---: | --- |
