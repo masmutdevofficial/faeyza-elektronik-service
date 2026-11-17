@@ -93,6 +93,12 @@ if ($page==='service-new' || $page==='service-edit') {
         if ($order) $data['accessories']=json_decode($order['accessories'],true);
     }
     $customers=$user['role']==='admin'?Database::all('SELECT c.id,c.name,c.address,u.phone FROM customers c JOIN users u ON u.id=c.user_id ORDER BY c.name'):[];
+    if ($user['role']==='admin' && !$editing && $method==='GET' && array_key_exists('customer_id',$_GET)) {
+        try { $selectedCustomerId=Validate::integer($_GET['customer_id'],1); }
+        catch(ValidationException) { abort_page(400); }
+        if (!in_array($selectedCustomerId,array_map(fn($customer)=>(int)$customer['id'],$customers),true)) abort_page(404);
+        $data['customer_id']=$selectedCustomerId;
+    }
     if ($user['role']==='admin' && !$editing) {
         foreach($customers as $customer) if(($data['customer_id']??'')==$customer['id']) {
             foreach(['customer_name'=>'name','contact_phone'=>'phone','address'=>'address'] as $field=>$source) {

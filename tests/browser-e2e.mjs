@@ -83,7 +83,14 @@ export async function runBrowserE2E({tab,viewport,fixture,save,base='http://127.
     await goto('invoice&id='+fixture.other_order);check('13 IDOR invoice lain ditolak',(await text('main')).includes('404'));await save('idor-denied.jpg');
     for(const width of [375,768,1440]) {await responsive('dashboard',width);await save('customer-dashboard-'+width+'.jpg');await responsive('invoice&id='+orderId,width);}
     await size(1440);await goto('dashboard');await click('Keluar');await login(fixture.admin_phone);
-    await goto('service-new');
+    await goto('customers');await tab.playwright.expectNavigation(()=>tab.playwright.locator('tbody .table-primary').first().click(),{waitUntil:'domcontentloaded'});
+    const contextName=await text('h1');
+    const contextHref=await tab.playwright.getByRole('link',{name:'Servis baru',exact:true}).getAttribute('href');
+    check('17 tombol detail membawa ID konsumen',contextHref.includes('customer_id='));
+    await link('Servis baru');
+    check('17 konsumen dari detail sudah terpilih',await text('[data-contact-name]')===contextName);
+    await tab.reload();
+    check('17 pilihan awal bertahan setelah reload',await tab.playwright.evaluate(()=>{const option=document.querySelector('[data-customer-picker]').selectedOptions[0];return !!option.value&&document.querySelector('[data-contact-name]').textContent===option.dataset.customerName&&!document.querySelector('[data-customer-preview]').hidden;}));
     const customerOptions=await tab.playwright.locator('[data-customer-picker]').evaluate(el=>[...el.options].filter(o=>o.value).map(o=>({id:o.value,name:o.dataset.customerName,phone:o.dataset.customerPhone,address:o.dataset.customerAddress})));
     await tab.playwright.locator('[data-customer-picker]').selectOption(customerOptions[0].id);
     check('15 pilihan konsumen langsung mengisi tiga kontak',await tab.playwright.evaluate(()=>{const option=document.querySelector('[data-customer-picker]').selectedOptions[0];return document.querySelector('[name="customer_name"]').value===option.dataset.customerName&&document.querySelector('[name="address"]').value===option.dataset.customerAddress&&document.querySelector('[data-contact-phone]').textContent===option.dataset.customerPhone;}));
