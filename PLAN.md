@@ -26,3 +26,13 @@ Keputusan: relasi pemilik melalui customer_id/user_id, snapshot identitas di inv
 - [x] Perbaikan respons CSRF Apache, regresi 111 PASS, HTTP produksi 30 PASS, browser produksi 20 PASS, status 24 resource lama sama.
 
 Status deployment: COMPLETE. Kedua container healthy, admin login/logout/login ulang berhasil, dan tidak ada data demo dipindahkan ke produksi. Lihat DEPLOYMENT_REPORT.md.
+
+## Penyederhanaan tampilan
+
+- [x] Hapus slogan, paragraf promosi, dekorasi banner, dan teks implementasi dari halaman aplikasi.
+- [x] Beranda admin memakai antrean, angka ringkasan, dan tabel servis.
+- [x] Pelanggan memakai navigasi Beranda / Servis baru / Invoice, dengan kartu perangkat.
+- [x] Form perangkat didahulukan; kontak terisi otomatis, field opsional dilipat, tombol kirim tetap terjangkau.
+- [x] Validasi membuka bagian kontak yang invalid; menu admin dapat ditutup dengan Escape.
+- [x] Regresi 111 native/HTTP dan 56 pemeriksaan browser lulus, termasuk simulasi bisnis dan viewport 375/768/1440.
+- [ ] Rilis UI ke resource Coolify Faeyza dan verifikasi produksi.

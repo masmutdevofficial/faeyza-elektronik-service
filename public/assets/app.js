@@ -22,7 +22,11 @@ menu?.addEventListener('click', () => {
   menu.setAttribute('aria-label', open ? 'Tutup navigasi' : 'Buka navigasi');
 });
 document.addEventListener('keydown', event => {
-  if (event.key === 'Escape') { document.body.classList.remove('nav-open'); menu?.setAttribute('aria-expanded', 'false'); }
+  if (event.key === 'Escape') { document.body.classList.remove('nav-open'); menu?.setAttribute('aria-expanded', 'false'); menu?.setAttribute('aria-label', 'Buka navigasi'); }
+});
+// Reveal invalid required fields even when their contact section is collapsed.
+document.querySelectorAll('details').forEach(details => {
+  details.addEventListener('invalid', () => { details.open = true; }, true);
 });
 document.querySelectorAll('[data-custom-select]').forEach(select => {
   const field = document.querySelector('[data-custom-field="' + select.dataset.customSelect + '"]');
