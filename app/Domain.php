@@ -10,7 +10,7 @@ final class Clock {
 final class Validate {
     public static function password(array $d,string $key='password',int $minimum=0): string {
         $v=$d[$key]??null;
-        if(!is_string($v) || strlen($v)<$minimum || strlen($v)>72 || str_contains($v,"\0")) throw new ValidationException('Password harus '.$minimum.'–72 byte dan tidak mengandung karakter null.');
+        if(!is_string($v) || !mb_check_encoding($v,'UTF-8') || mb_strlen($v)<$minimum || strlen($v)>72 || str_contains($v,"\0")) throw new ValidationException('Password minimal '.$minimum.' karakter, maksimal 72 byte, dan tidak mengandung karakter null.');
         return $v;
     }
     public static function text(array $d,string $key,int $max=4000,bool $required=true): string {
@@ -50,9 +50,11 @@ final class Validate {
     }
 }
 final class Auth {
+    public const PASSWORD_MIN=6;
+    public static function stamp(array $user): string { return hash('sha256',$user['id'].'|'.$user['phone'].'|'.$user['role'].'|'.$user['password_hash']); }
     public static function register(array $d): int {
         $phone=Validate::phone($d['phone']??''); $name=Validate::text($d,'name',150);
-        $address=Validate::text($d,'address'); $password=Validate::password($d,'password',10);
+        $address=Validate::text($d,'address'); $password=Validate::password($d,'password',self::PASSWORD_MIN);
         try { return Database::tx(function() use($phone,$name,$address,$password) {
             Database::query('INSERT INTO users(phone,password_hash,role) VALUES (?,?,?)',[$phone,password_hash($password,PASSWORD_DEFAULT),'customer']);
             $id=Database::id(); Database::query('INSERT INTO customers(user_id,name,address) VALUES (?,?,?)',[$id,$name,$address]); return $id;
@@ -79,12 +81,57 @@ final class Auth {
         // Hash dummy menjaga proses verifikasi tetap dilakukan untuk nomor yang tidak terdaftar.
         $hash=$u['password_hash']??'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.';
         if (!password_verify($password,$hash) || !$u) throw new ValidationException('Nomor HP atau password salah.');
-        if (password_needs_rehash($hash,PASSWORD_DEFAULT)) Database::query('UPDATE users SET password_hash=? WHERE id=?',[password_hash($password,PASSWORD_DEFAULT),$u['id']]);
+        if (password_needs_rehash($hash,PASSWORD_DEFAULT)) {
+            $newHash=password_hash($password,PASSWORD_DEFAULT);
+            if (Database::query('UPDATE users SET password_hash=? WHERE id=? AND password_hash=?',[$newHash,$u['id'],$hash])->affected_rows!==1) throw new ValidationException('Akun berubah. Silakan masuk kembali.');
+            $u['password_hash']=$newHash;
+        }
         // Bucket IP tetap menghitung percobaan agar login sukses tidak mereset proteksi brute force IP.
         Database::query('UPDATE login_limits SET attempts=0 WHERE bucket=?',[hash('sha256','phone:'.$normalized)]);
         return $u;
     }
     public static function admin(array $actor): void { if (($actor['role']??'')!=='admin') throw new ValidationException('Akses admin diperlukan.'); }
+}
+final class Accounts {
+    private static function verifyCurrent(array $actor,array $d): array {
+        $user=Database::one('SELECT * FROM users WHERE id=?',[$actor['id']]);
+        if (!$user) throw new ValidationException('Akun tidak ditemukan.');
+        return Auth::login($user['phone'],Validate::password($d,'current_password',1),$_SERVER['REMOTE_ADDR']??'account-change');
+    }
+    private static function newPassword(array $d): string {
+        $password=Validate::password($d,'new_password',Auth::PASSWORD_MIN);
+        if ($password!==Validate::password($d,'password_confirm',Auth::PASSWORD_MIN)) throw new ValidationException('Konfirmasi password tidak sama.');
+        return $password;
+    }
+    public static function changePassword(array $d,array $actor): array {
+        $password=self::newPassword($d); $verified=self::verifyCurrent($actor,$d);
+        return Database::tx(function() use($verified,$password) {
+            $user=Database::one('SELECT * FROM users WHERE id=? FOR UPDATE',[$verified['id']]);
+            if (!$user || !hash_equals($verified['password_hash'],$user['password_hash'])) throw new ValidationException('Akun berubah. Silakan masuk kembali.');
+            $user['password_hash']=password_hash($password,PASSWORD_DEFAULT);
+            Database::query('UPDATE users SET password_hash=? WHERE id=?',[$user['password_hash'],$user['id']]);
+            return $user;
+        });
+    }
+    public static function changePhone(array $d,array $actor): array {
+        Auth::admin($actor); $phone=Validate::phone($d['phone']??''); $verified=self::verifyCurrent($actor,$d);
+        try { return Database::tx(function() use($verified,$phone) {
+            $user=Database::one('SELECT * FROM users WHERE id=? FOR UPDATE',[$verified['id']]);
+            if (!$user || $user['role']!=='admin' || !hash_equals($verified['password_hash'],$user['password_hash'])) throw new ValidationException('Akun berubah. Silakan masuk kembali.');
+            Database::query('UPDATE users SET phone=? WHERE id=?',[$phone,$user['id']]);
+            $user['phone']=$phone; return $user;
+        }); } catch(mysqli_sql_exception $e) { if ($e->getCode()===1062) throw new ValidationException('Nomor HP sudah digunakan akun lain.'); throw $e; }
+    }
+    public static function resetCustomerPassword(int $customerId,array $d,array $actor): void {
+        Auth::admin($actor); $password=self::newPassword($d); $verified=self::verifyCurrent($actor,$d);
+        Database::tx(function() use($customerId,$verified,$password) {
+            $admin=Database::one('SELECT * FROM users WHERE id=? FOR UPDATE',[$verified['id']]);
+            if (!$admin || $admin['role']!=='admin' || !hash_equals($verified['password_hash'],$admin['password_hash'])) throw new ValidationException('Akun admin berubah. Silakan masuk kembali.');
+            $customer=Database::one("SELECT u.id FROM customers c JOIN users u ON u.id=c.user_id WHERE c.id=? AND u.role='customer' FOR UPDATE",[$customerId]);
+            if (!$customer) throw new ValidationException('Konsumen tidak ditemukan.');
+            Database::query('UPDATE users SET password_hash=? WHERE id=?',[password_hash($password,PASSWORD_DEFAULT),$customer['id']]);
+        });
+    }
 }
 final class Orders {
     public const STATUSES=['Menunggu Konfirmasi','Diterima','Dalam Pengerjaan','Menunggu Sparepart','Selesai','Sudah Diambil','Dibatalkan'];

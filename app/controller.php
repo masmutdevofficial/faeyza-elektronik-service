@@ -2,13 +2,13 @@
 declare(strict_types=1);
 $page=$_GET['page']??'dashboard';
 if (!is_string($page)) abort_page(404);
-$routes=['login','register','logout','dashboard','orders','invoices','service-new','service-edit','order','invoice','success','customers','customer','customer-new','customer-edit','parts','part','part-new','part-edit'];
+$routes=['login','register','logout','account','customer-password','dashboard','orders','invoices','service-new','service-edit','order','invoice','success','customers','customer','customer-new','customer-edit','parts','part','part-new','part-edit'];
 if (!in_array($page,$routes,true)) abort_page(404);
 $method=$_SERVER['REQUEST_METHOD'];
 if (!in_array($method,['GET','POST'],true)) { header('Allow: GET, POST'); abort_page(405); }
 $user=current_user();
 if (!in_array($page,['login','register'],true)) $user=require_login();
-$adminRoutes=['customers','customer','customer-new','customer-edit','parts','part','part-new','part-edit','service-edit'];
+$adminRoutes=['customers','customer','customer-new','customer-edit','customer-password','parts','part','part-new','part-edit','service-edit'];
 if (in_array($page,$adminRoutes,true)) $user=require_admin();
 if ($method==='POST' && (!isset($_POST['csrf']) || !is_string($_POST['csrf']) || !hash_equals($_SESSION['csrf'],$_POST['csrf']))) abort_page(419);
 $id=isset($_GET['id']) && is_string($_GET['id']) && ctype_digit($_GET['id']) ? (int)$_GET['id'] : 0;
@@ -18,13 +18,14 @@ if (in_array($page,['login','register'],true)) {
     if ($method==='POST') {
         try {
             if ($page==='register') {
-                if (Validate::password($_POST,'password',10)!==Validate::password($_POST,'password_confirm',10)) throw new ValidationException('Konfirmasi password tidak sama.');
+                if (Validate::password($_POST,'password',Auth::PASSWORD_MIN)!==Validate::password($_POST,'password_confirm',Auth::PASSWORD_MIN)) throw new ValidationException('Konfirmasi password tidak sama.');
                 $uid=Auth::register($_POST);
+                $auth=Database::one('SELECT * FROM users WHERE id=?',[$uid]);
             } else {
                 $auth=Auth::login(Validate::text($_POST,'phone',40),Validate::password($_POST,'password',1),$_SERVER['REMOTE_ADDR']??'unknown');
                 $uid=(int)$auth['id'];
             }
-            session_regenerate_id(true); $_SESSION=['user_id'=>$uid,'csrf'=>token(),'last_seen'=>time()]; redirect('dashboard');
+            sign_in($auth); redirect('dashboard');
         } catch(ValidationException $e) { $error=$e->getMessage(); http_response_code(422); }
     }
     render('auth',compact('page','data','error')); return;
@@ -35,6 +36,28 @@ if ($page==='logout') {
     $cookie=session_get_cookie_params();
     setcookie(session_name(),'', ['expires'=>time()-42000,'path'=>$cookie['path'],'secure'=>$cookie['secure'],'httponly'=>true,'samesite'=>'Lax']);
     session_destroy(); redirect('login');
+}
+if ($page==='account') {
+    if ($method==='POST') {
+        try {
+            $action=Validate::text($_POST,'action',30);
+            if ($action==='phone') { if ($user['role']!=='admin') abort_page(403); $updated=Accounts::changePhone($_POST,$user); }
+            elseif ($action==='password') $updated=Accounts::changePassword($_POST,$user);
+            else throw new ValidationException('Permintaan tidak valid.');
+            sign_in($updated);
+            flash($action==='phone'?'Nomor HP berhasil diperbarui.':'Password berhasil diperbarui.'); redirect('account');
+        } catch(ValidationException $e) { $error=$e->getMessage(); http_response_code(422); }
+    }
+    render('account',compact('data','error')); return;
+}
+if ($page==='customer-password') {
+    $customer=Database::one("SELECT c.id,c.name,u.phone FROM customers c JOIN users u ON u.id=c.user_id WHERE c.id=? AND u.role='customer'",[$id]);
+    if (!$customer) abort_page(404);
+    if ($method==='POST') {
+        try { Accounts::resetCustomerPassword($id,$_POST,$user); flash('Password pelanggan berhasil diperbarui.'); redirect('customer',['id'=>$id]); }
+        catch(ValidationException $e) { $error=$e->getMessage(); http_response_code(422); }
+    }
+    render('customer-password',compact('customer','error')); return;
 }
 if ($page==='dashboard') {
     if ($method!=='GET') abort_page(405);

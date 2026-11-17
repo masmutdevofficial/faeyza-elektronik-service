@@ -2,7 +2,7 @@
 <section class="auth-card"><a class="brand brand-with-logo" href="<?=e(url('login'))?>"><?php if(brand()['logo']): ?><img src="<?=e(brand()['logo'])?>" alt="<?=e(brand()['name'])?>"><?php else: ?><?=e(brand()['name'])?><?php endif; ?></a><h1><?=$register?'Daftar akun':'Masuk'?></h1><form method="post" class="form-stack">
 <?=csrf()?><?php if($register): input_field('name','Nama lengkap',$data,'text',true,'maxlength="150" autocomplete="name"'); textarea_field('address','Alamat',$data,true); endif; ?>
 <?php input_field('phone','Nomor HP / WhatsApp',$data,'tel',true,'maxlength="25" inputmode="tel" autocomplete="tel" placeholder="08…"'); ?>
-<label class="field"><span>Password <b>*</b></span><input type="password" name="password" required <?=$register?'minlength="10"':''?> maxlength="72" autocomplete="<?=$register?'new-password':'current-password'?>" <?=$register?'placeholder="Minimal 10 karakter"':''?>></label>
-<?php if($register): ?><label class="field"><span>Ulangi password <b>*</b></span><input type="password" name="password_confirm" required minlength="10" maxlength="72" autocomplete="new-password"></label><?php endif; ?>
+<label class="field"><span>Password <b>*</b></span><input type="password" name="password" required <?=$register?'minlength="6"':''?> maxlength="72" autocomplete="<?=$register?'new-password':'current-password'?>" <?=$register?'placeholder="Minimal 6 karakter"':''?>></label>
+<?php if($register): ?><label class="field"><span>Ulangi password <b>*</b></span><input type="password" name="password_confirm" required minlength="6" maxlength="72" autocomplete="new-password"></label><?php endif; ?>
 <button class="button wide" type="submit"><?=$register?'Buat akun':'Masuk'?> <?=mdi('arrow-right')?></button></form><p class="auth-switch"><?=$register?'Sudah punya akun?':'Belum punya akun?'?> <a href="<?=e(url($register?'login':'register'))?>"><?=$register?'Masuk':'Daftar'?></a></p></section>
 <?php require ROOT.'/views/footer.php'; ?>

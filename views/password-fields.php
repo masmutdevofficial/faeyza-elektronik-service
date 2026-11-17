@@ -1,0 +1,3 @@
+<label class="field"><span><?=e($currentPasswordLabel??'Password saat ini')?> <b>*</b></span><input name="current_password" type="password" required maxlength="72" autocomplete="current-password"></label>
+<label class="field"><span>Password baru <b>*</b></span><input name="new_password" type="password" required minlength="<?=Auth::PASSWORD_MIN?>" maxlength="72" autocomplete="new-password"><small>Minimal <?=Auth::PASSWORD_MIN?> karakter.</small></label>
+<label class="field"><span>Ulangi password baru <b>*</b></span><input name="password_confirm" type="password" required minlength="<?=Auth::PASSWORD_MIN?>" maxlength="72" autocomplete="new-password"></label>

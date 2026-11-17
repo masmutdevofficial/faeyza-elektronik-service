@@ -29,8 +29,11 @@ function badge(string $status): string {
 }
 function current_user(): ?array {
     if (empty($_SESSION['user_id'])) return null;
-    return Database::one('SELECT id,phone,role FROM users WHERE id=?',[$_SESSION['user_id']]);
+    $user=Database::one('SELECT id,phone,role,password_hash FROM users WHERE id=?',[$_SESSION['user_id']]);
+    if (!$user || !isset($_SESSION['auth_stamp']) || !hash_equals(Auth::stamp($user),(string)$_SESSION['auth_stamp'])) { $_SESSION=['csrf'=>token(),'last_seen'=>time()]; session_regenerate_id(true); return null; }
+    unset($user['password_hash']); return $user;
 }
+function sign_in(array $user): void { session_regenerate_id(true); $_SESSION=['user_id'=>$user['id'],'auth_stamp'=>Auth::stamp($user),'csrf'=>token(),'last_seen'=>time()]; }
 function require_login(): array { $u=current_user(); if (!$u) redirect('login'); return $u; }
 function require_admin(): array { $u=require_login(); if ($u['role']!=='admin') abort_page(403); return $u; }
 function abort_page(int $status): never {

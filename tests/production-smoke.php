@@ -51,6 +51,10 @@ try {
     verify(http('/assets/faeyza-logo.jpg')['status']===200,'Logo asset available');
     verify(http('/assets/print.css')['status']===200,'Print stylesheet available');
     verify(http('/assets/invoice.css')['status']===200,'Invoice stylesheet available');
+    verify(http('/index.php?page=account')['status']===303,'Account settings require login');
+    verify(http('/index.php?page=customer-password&id=1')['status']===303,'Customer password reset requires login');
+    $register=http('/index.php?page=register');
+    verify($register['status']===200 && substr_count($register['body'],'minlength="6"')===2,'Registration uses six-character minimum');
 } catch(Throwable $e) { verify(false,$e->getMessage()); }
 finally { if(is_file($cookie))unlink($cookie); }
 $failed=count(array_filter($results,fn($r)=>$r['status']==='FAIL'));

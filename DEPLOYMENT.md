@@ -26,7 +26,7 @@ php bin/doctor.php
 php bin/create-admin.php NOMOR_HP_ADMIN
 ```
 
-Masukkan password unik minimal 12 karakter melalui stdin privat ketika diminta. Jangan mencantumkan password di argv, Git, issue, screenshot, atau log. Akun admin produksi harus menggunakan nomor HP pemilik yang benar. Admin lokal/testing tidak otomatis disalin.
+Masukkan password unik minimal 6 karakter melalui stdin privat ketika diminta. Jangan mencantumkan password di argv, Git, issue, screenshot, atau log. Akun admin produksi harus menggunakan nomor HP pemilik yang benar. Admin lokal/testing tidak otomatis disalin.
 
 ## Verifikasi dan pemeliharaan
 

@@ -50,6 +50,7 @@
 .signature-switch>span:after{content:'';display:block;width:22px;height:22px;margin:3px;border-radius:50%;background:#fff;box-shadow:0 1px 3px #0002;transition:transform .15s}
 .signature-switch input:checked+span{background:var(--primary)}.signature-switch input:checked+span:after{transform:translateX(20px)}
 .signature-switch input:focus-visible+span{outline:3px solid #85b7f4;outline-offset:3px}
+.account-settings{max-width:580px;display:grid;gap:22px}.account-settings>.panel{margin:0}.account-link{display:flex;align-items:center;justify-content:center;width:36px;height:40px;color:var(--muted)}.account-link:hover{color:var(--primary)}.account-link .mdi-icon{width:22px;height:22px}.page-heading:has(.page-actions){flex-wrap:wrap}.page-actions{display:flex;gap:10px;flex-wrap:wrap}.page-actions .button{font-size:12px}
 /* Interface: navigation, records, and actions without promotional content. */
 :root{--ink:#182a40;--muted:#627185;--line:#dfe5ec;--bg:#f5f6f8;--radius:10px;--shadow:none}
 body{font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:var(--ink)}

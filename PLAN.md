@@ -64,3 +64,12 @@ Status deployment: COMPLETE. Kedua container healthy, admin login/logout/login u
 - [x] Tombol servis baru juga tersedia saat konsumen sudah memiliki riwayat.
 - [x] Validasi konteks GET, pemisahan dari POST, serta batas role diuji: 144 native/HTTP PASS.
 - [x] Regresi 73 browser PASS; runtime 64dc7c9 dirilis; 31 HTTP dan 8 pemeriksaan browser produksi PASS tanpa submit pesanan.
+
+## Pengaturan akun
+
+- [x] Admin mengubah nomor sendiri dengan normalisasi/constraint unik dan verifikasi password saat ini.
+- [x] Admin/pelanggan mengubah password sendiri; admin dapat mereset password pelanggan.
+- [x] Minimum 6 karakter pada registrasi, tambah akun, pengaturan dan CLI.
+- [x] CSRF, role, hash password, rate limit verifikasi, konfirmasi password, dan pencabutan sesi lama.
+- [x] Regresi 186 native/HTTP PASS pada database testing terpisah, termasuk rehash login dan pembaruan sesi atomik.
+- [ ] Verifikasi browser/responsif dan rilis ke resource Faeyza.

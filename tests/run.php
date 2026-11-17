@@ -242,6 +242,7 @@ try {
     check($http->request('orders','GET',[],['q'=>['invalid']])['code']===400,'11 input array tidak valid ditolak aman');
     $custom=Orders::create(fixture(['item_name'=>'Lainnya','item_name_custom'=>'Mesin kopi','brand'=>'Lainnya','brand_custom'=>'Merek uji','accessories'=>['Remote','Lainnya'],'accessories_custom'=>'Tas perangkat']),$a);
     check(Orders::get($custom,$a)['item_name']==='Mesin kopi' && str_contains(Orders::get($custom,$a)['accessories'],'Tas perangkat'),'02 barang merk kelengkapan custom berfungsi');
+    require __DIR__.'/accounts.php';
     // Fixture untuk browser: hanya testing, password acak tidak ditulis ke laporan.
     Database::query('DELETE FROM login_limits');
     file_put_contents(__DIR__.'/local-fixtures.json',json_encode(['password'=>$password,'admin_phone'=>'08170002466','customer_phone'=>'081822233344','other_phone'=>'081911122233','own_order'=>$webOrder,'other_order'=>$ob,'part'=>$part],JSON_PRETTY_PRINT));

@@ -53,7 +53,7 @@ C:\xampp\php\php.exe bin/doctor.php
 C:\xampp\php\php.exe bin/create-admin.php 08xxxxxxxxxx
 ```
 
-Password diminta dari stdin, minimal 12 byte, maksimal 72 byte. Gunakan terminal privat karena terminal tertentu menampilkan input. Password tidak masuk argumen command, source, atau log. CLI menolak nomor duplikat dan tidak mengubah role akun yang sudah ada. Simpan kredensial admin secara privat.
+Password diminta dari stdin, minimal 6 karakter, maksimal 72 byte. Gunakan terminal privat karena terminal tertentu menampilkan input. Password tidak masuk argumen command, source, atau log. CLI menolak nomor duplikat dan tidak mengubah role akun yang sudah ada. Simpan kredensial admin secara privat.
 
 8. Disarankan atur Apache VirtualHost `DocumentRoot "C:/xampp/htdocs/bengkel/public"`, dengan `AllowOverride All` dan `Require all granted` pada direktori public. Alternatif XAMPP: buka `http://localhost/bengkel/public/`. `.htaccess` di root menolak akses source, dan public mengizinkan hanya area publik. Apache 2.4 diperlukan untuk aturan Require.
 
@@ -152,3 +152,12 @@ storage/          log privat dan session files
 Rate limit login: maksimal 8 percobaan per nomor dan per IP dalam jendela 15 menit. Bucket IP menghitung semua percobaan untuk menahan credential stuffing. Session idle 2 jam, regenerasi setelah login, cookie HttpOnly/SameSite, CSRF semua POST, role server-side, output escaping dan query prepared. Semua respons privat memakai no-store dan CSP. Tidak mempercayai header proxy untuk IP tanpa konfigurasi proxy yang sah.
 
 Riwayat hasil aktual dan batas verifikasi tersedia di TEST_REPORT.md. Pengujian lokal memakai PHP development server dan MariaDB nyata; Apache produksi kemudian dijalankan dan diverifikasi pada container Coolify, lihat DEPLOYMENT_REPORT.md. XAMPP/shared hosting konvensional tidak dijalankan dalam sesi ini.
+
+## Pengaturan akun dan password
+
+- Admin: buka **Akun** di navigasi. Nomor HP sendiri dapat diganti dengan verifikasi password saat ini. Nomor dinormalisasi ke 62 dan harus unik di seluruh akun, termasuk konsumen.
+- Admin mengganti password pelanggan: **Konsumen → detail pelanggan → Ganti password**. Masukkan password admin saat ini, password baru pelanggan, dan konfirmasinya. Nomor akun, pemilik invoice, dan riwayat servis tetap sama.
+- Pelanggan: buka ikon roda gigi **Pengaturan akun** di header untuk mengganti password sendiri dengan password saat ini dan konfirmasi password baru.
+- Minimum password **6 karakter**, maksimum **72 byte**, berlaku pada registrasi, tambah konsumen, perubahan password, dan pembuatan admin melalui CLI. Password lama yang lebih panjang tetap berlaku.
+- Perubahan nomor atau password mencabut sesi lain milik akun tersebut. Sesi yang melakukan perubahan sendiri diperbarui otomatis; pelanggan yang direset admin perlu login kembali. Setelah pembaruan fitur ini, sesi dari versi lama perlu login sekali lagi.
+- Password tidak dapat ditampilkan kembali; semua kolom password selalu kosong setelah validasi gagal. Verifikasi password saat ini memakai pembatas percobaan login yang sama. Tidak ada endpoint reset publik atau pengiriman SMS/WhatsApp.

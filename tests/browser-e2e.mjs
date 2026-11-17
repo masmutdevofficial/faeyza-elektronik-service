@@ -80,11 +80,16 @@ export async function runBrowserE2E({tab,viewport,fixture,save,base='http://127.
     await goto('part&id='+partId);check('07 histori stok memuat pembelian dan penggunaan',(await text('tbody')).includes('Pembelian simulasi E2E')&&(await text('tbody')).includes('Penyesuaian penggunaan'));await save('stock-history-desktop.jpg');
     await click('Keluar');await login(phone);await goto('invoices');await fill('q',invoice);await click('Cari');check('13 konsumen mencari invoice sendiri',(await text('.service-cards')).includes(invoice)&&(await text('.service-cards')).includes('Selesai'));
     await link('Lihat invoice '+invoice);check('13 invoice final Rp150.000',(await text('[data-testid="total-cost"]'))==='Rp150.000');check('13 invoice memuat garansi',(await text('main')).includes(warrantyDate.split('-').reverse().join('/')));check('14 konsumen melihat tanda tangan yang dipilih admin',await tab.playwright.locator('[data-testid="workshop-signature"]').count()===1);await save('invoice-final-desktop.jpg');
+    await goto('dashboard');await link('Pengaturan akun');
+    check('18 pelanggan dapat membuka pengaturan akun',(await currentUrl()).includes('page=account'));
+    check('18 form pelanggan meminta password saat ini dan minimum enam',await tab.playwright.evaluate(()=>!!document.querySelector('[name="current_password"]')&&document.querySelector('[name="new_password"]').minLength===6&&!document.querySelector('[name="phone"]')));
+    for(const width of [375,768,1440]) {await responsive('account',width);if(width===375)await save('customer-account-mobile.jpg');}
     await goto('invoice&id='+fixture.other_order);check('13 IDOR invoice lain ditolak',(await text('main')).includes('404'));await save('idor-denied.jpg');
     for(const width of [375,768,1440]) {await responsive('dashboard',width);await save('customer-dashboard-'+width+'.jpg');await responsive('invoice&id='+orderId,width);}
     await size(1440);await goto('dashboard');await click('Keluar');await login(fixture.admin_phone);
     await goto('customers');await tab.playwright.expectNavigation(()=>tab.playwright.locator('tbody .table-primary').first().click(),{waitUntil:'domcontentloaded'});
     const contextName=await text('h1');
+    const contextProfileUrl=await currentUrl();
     const contextHref=await tab.playwright.getByRole('link',{name:'Servis baru',exact:true}).getAttribute('href');
     check('17 tombol detail membawa ID konsumen',contextHref.includes('customer_id='));
     await link('Servis baru');
@@ -105,7 +110,14 @@ export async function runBrowserE2E({tab,viewport,fixture,save,base='http://127.
     check('15 pemilihan konsumen mobile tanpa overflow',await tab.playwright.evaluate(()=>innerWidth===375&&document.documentElement.scrollWidth<=innerWidth));await tab.playwright.locator('[data-customer-preview]').click();await save('customer-autofill-mobile.jpg');
     await tab.playwright.locator('[name="item_name"]').selectOption('TV');await tab.playwright.locator('[name="brand"]').selectOption('LG');await fill('model','Autofill QA');await fill('complaint','Uji pengisian kontak otomatis');await click('Kirim pengajuan servis');
     check('15 pengajuan admin berhasil tanpa mengetik ulang kontak',(await text('main')).includes(customerOptions[0].name)&&(await currentUrl()).includes('success'));
-    for(const width of [375,768,1440])for(const route of ['dashboard','orders','invoices','customers','parts','service-new','customer-new','part-new']) await responsive(route,width);
+    await tab.goto(contextProfileUrl);await link('Ganti password');
+    check('18 admin dapat membuka reset password dari detail konsumen',await tab.playwright.getByRole('button',{name:'Simpan password pelanggan',exact:true}).isVisible());
+    check('18 reset pelanggan meminta password admin dan minimum enam',await tab.playwright.evaluate(()=>document.querySelector('[name="current_password"]').type==='password'&&document.querySelector('[name="new_password"]').minLength===6&&document.querySelector('[name="password_confirm"]').minLength===6));
+    const resetCustomerId=new URL(contextProfileUrl).searchParams.get('id');
+    for(const width of [375,768,1440]){await responsive('customer-password&id='+resetCustomerId,width);await responsive('customer&id='+resetCustomerId,width);}
+    await goto('account');check('18 form akun admin memiliki nomor HP dan password',await tab.playwright.getByRole('button',{name:'Simpan nomor HP',exact:true}).isVisible()&&await tab.playwright.getByRole('button',{name:'Simpan password',exact:true}).isVisible());
+    await save('admin-account-desktop.jpg');
+    for(const width of [375,768,1440])for(const route of ['dashboard','orders','invoices','customers','parts','service-new','customer-new','part-new','account']) await responsive(route,width);
     await size(1440);await goto('dashboard');await save('admin-desktop.jpg');
     return {results,metrics,orderId,partId,invoice,warrantyDate};
   } catch(error) { error.results=results;throw error; }
