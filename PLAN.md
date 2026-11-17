@@ -55,4 +55,4 @@ Status deployment: COMPLETE. Kedua container healthy, admin login/logout/login u
 - [x] Perubahan pilihan membersihkan kontak sebelumnya; koreksi manual dan input saat validasi gagal tetap dipertahankan.
 - [x] Website www.faeyzateknik.com dan nama penanda tangan Asmat pada invoice/cetak.
 - [x] Regresi 134 native/HTTP, 70 browser, 32 PDF PASS; layout A4 diperiksa visual.
-- [ ] Rilis ke resource Faeyza dan verifikasi produksi tanpa mengubah data pesanan.
+- [x] Rilis 9836381 ke resource Faeyza; 31 HTTP dan 8 browser produksi PASS tanpa submit/perubahan data pesanan.

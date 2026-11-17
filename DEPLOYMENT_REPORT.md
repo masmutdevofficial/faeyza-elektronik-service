@@ -106,3 +106,9 @@ Simulasi bisnis lengkap sebelumnya sudah lulus pada database testing: registrasi
 Tidak ada kegagalan aplikasi yang diketahui setelah perbaikan dan pengujian akhir. Printer fisik tidak diuji di server; pencetakan browser/PDF sudah diverifikasi lokal. Backup terjadwal/offsite belum dikonfigurasi karena tujuan backup belum diberikan. Prosedur backup, migrasi terkontrol, dan rollback tersedia di DEPLOYMENT.md. Jangan menghapus volume atau memakai reset-test pada produksi.
 
 **FINAL VERDICT:** deployment GitHub → Coolify selesai, domain HTTPS aktif, database khusus healthy, admin dapat login, dan resource lama tetap pada status semula.
+
+## Pembaruan kontak dan invoice
+
+Runtime 983638100e309e6f070715d5ebedfe67a5bebf1c dirilis manual ke resource Faeyza yang sama melalui Chrome profil Imam. Deployment enpjhqf2vcfolqvaqmcruope berstatus Success, durasi 29 detik. Log menunjukkan database Faeyza Healthy dan web Faeyza Started. Tidak ada perubahan compose, migrasi, volume, kredensial, atau resource aplikasi lain.
+
+Servis baru admin mengambil nama/HP/alamat dari konsumen terpilih; koreksi kontak opsional. Invoice mencetak www.faeyzateknik.com dan penanda tangan Asmat. Pemeriksaan produksi read-only: 31 HTTP dan 8 browser PASS. Pemilihan Indra diperiksa tanpa submit; invoice yang sudah ada dibuka untuk memastikan website/nama benar. Semua pengajuan simulasi hanya dibuat pada database testing. Detail regresi lokal 134 native/HTTP, 70 browser, 32 PDF berada di TEST_REPORT.md.
