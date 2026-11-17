@@ -4,6 +4,8 @@ Aplikasi manajemen penerimaan/perbaikan elektronik, PHP native 8.2+, MySQLi prep
 
 Deployment Docker/Coolify: lihat [DEPLOYMENT.md](DEPLOYMENT.md). Database produksi memakai container dan volume khusus Faeyza, terpisah dari database lokal maupun aplikasi lain.
 
+**Produksi aktif:** https://faeyza.dirgasatya.id — [repository privat GitHub](https://github.com/masmutdevofficial/faeyza-elektronik-service). Hasil deployment dan pemeriksaan aktual tersedia di [DEPLOYMENT_REPORT.md](DEPLOYMENT_REPORT.md). Admin produksi dibuat secara terpisah dengan persetujuan pemilik; kredensial privat tidak tersimpan dalam repository. Coolify disetel untuk deployment manual.
+
 ## Hasil lokal pada komputer ini
 
 Source: `C:\project\bengkel`. Runtime portable terpisah: `C:\project\bengkel-runtime` (PHP 8.5.12 dan MariaDB 11.4.5, port DB 3307, hanya loopback). Database `faeyza` untuk development dan `faeyza_test` untuk pengujian. `.env` lokal sudah dikonfigurasi dengan akun aplikasi terbatas; testing memakai akun tersendiri. Password DB acak tidak dicantumkan di dokumentasi.
@@ -145,4 +147,4 @@ storage/          log privat dan session files
 
 Rate limit login: maksimal 8 percobaan per nomor dan per IP dalam jendela 15 menit. Bucket IP menghitung semua percobaan untuk menahan credential stuffing. Session idle 2 jam, regenerasi setelah login, cookie HttpOnly/SameSite, CSRF semua POST, role server-side, output escaping dan query prepared. Semua respons privat memakai no-store dan CSP. Tidak mempercayai header proxy untuk IP tanpa konfigurasi proxy yang sah.
 
-Riwayat hasil aktual dan batas verifikasi tersedia di TEST_REPORT.md. Apache/XAMPP dan hosting publik tidak dijalankan pada mesin ini; pengujian runtime memakai PHP development server dan MariaDB nyata.
+Riwayat hasil aktual dan batas verifikasi tersedia di TEST_REPORT.md. Pengujian lokal memakai PHP development server dan MariaDB nyata; Apache produksi kemudian dijalankan dan diverifikasi pada container Coolify, lihat DEPLOYMENT_REPORT.md. XAMPP/shared hosting konvensional tidak dijalankan dalam sesi ini.

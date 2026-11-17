@@ -110,7 +110,7 @@ Pemeriksaan sentinel teks panjang awalnya menganggap penanda `AKHIR-TECHNICIAN_N
 
 Klik window.print pada browser terhubung membuat dialog native memblokir respons otomasi tab. Computer Use tidak dapat mengambil monitor/dialog di lingkungan ini. Tab testing dipulihkan, dan keluaran cetak diverifikasi memakai engine print Chrome terpisah, PDF A4 aktual, ekstraksi teks, dan inspeksi PNG. Screenshot dialog native/printer fisik bukan bukti yang tersedia; tidak diklaim sebagai pengujian printer fisik. Pemeriksaan cetak wajib dipenuhi oleh hasil browser print-to-PDF aktual.
 
-Apache/XAMPP dan shared hosting publik tidak dijalankan dalam sesi ini; yang diuji adalah PHP server + MariaDB nyata. Panduan kompatibilitas, instalasi, dan deployment disediakan. Tidak ada deployment publik dilakukan. Branding toko/alamat/kontak resmi tetap perlu diisi pemilik sesuai kebutuhan. Semua akun dan data simulasi hanya untuk development/testing.
+Pada fase lokal, Apache/XAMPP dan hosting publik belum dijalankan; pengujian memakai PHP server + MariaDB nyata. Pada fase deployment berikutnya, Apache produksi benar-benar dibangun dan dijalankan di Coolify, domain HTTPS aktif, dan database/admin produksi baru diverifikasi. Rincian terbaru berada di DEPLOYMENT_REPORT.md. Akun dan data simulasi development/testing tidak disalin ke produksi.
 
 ## Final verdict
 
@@ -120,4 +120,14 @@ Regresi ulang setelah penggantian markup: **111 native/HTTP PASS**, **53 browser
 
 Tindak lanjut tema biru: warna dominan aplikasi diselaraskan dengan logo melalui config/branding.php, variabel header, dan app.css. Pemeriksaan browser tambahan **9 PASS, 0 FAIL** mencakup warna aktual banner/tombol/navigasi/fokus input/login, dashboard mobile 375px dan tablet 768px tanpa overflow, navigasi mobile, serta login kembali. Bukti: `tests/artifacts/blue-theme-results.json`, `blue-dashboard-desktop.png`, `blue-dashboard-375.png`, `blue-login-desktop.png`, dan `blue-service-mobile.png`. Kedua file PHP yang berubah lulus lint dan `git diff --check` lulus. Revisi ini hanya menyentuh konfigurasi warna serta stylesheet; suite backend/cetak 188 assertion di atas adalah hasil regresi sebelumnya, tidak dihitung sebagai pengujian ulang untuk revisi palet.
 
-**Siap diperiksa secara lokal.** Semua fitur wajib diimplementasikan, data tersimpan di MySQL/MariaDB, regresi terbaru 188 assertion lulus, dan bukti simulasi/visual/cetak tersedia. Jalankan `bin/start.ps1` dan gunakan konfigurasi development lokal; untuk production gunakan database serta admin baru sesuai README.
+**Siap diperiksa lokal dan melalui https://faeyza.dirgasatya.id.** Seluruh fitur diimplementasikan dengan penyimpanan MySQL/MariaDB. Riwayat suite 195 assertion lokal di atas tetap dibedakan dari pemeriksaan deployment terbaru di bawah.
+
+## Deployment Coolify dan regresi setelah perbaikan Apache
+
+Hasil aktual 17 November 2026: **111 native/HTTP PASS, 30 HTTP produksi PASS, 20 browser produksi PASS, 0 FAIL, 0 BLOCKED**. Sebanyak 33 file PHP lolos lint, Apache syntax OK, PHP 8.4.27 dan MariaDB 11.4.13 terhubung ke database Faeyza khusus. Status 24 resource lama sama sebelum/sesudah deployment; semua database lama tetap healthy.
+
+Produksi awal: 27 HTTP PASS dan 3 FAIL. Dua kegagalan berasal dari respons CSRF nonstandar 419 yang diubah Apache menjadi 500; reason phrase eksplisit memperbaikinya. Satu assertion cookie membaca respons yang belum tepat; cookie sebenarnya terbit saat redirect sebelumnya. Pemeriksa diperbaiki dan seluruh 30 skenario lulus pada domain produksi. Setelah perubahan helper, suite regresi native/HTTP benar-benar dijalankan ulang dan menghasilkan 111/111 PASS.
+
+Perintah: `.\tests\test.ps1 -Php C:\project\bengkel-runtime\php\php.exe`, `node --check public/assets/app.js`, dan `php tests/production-smoke.php https://faeyza.dirgasatya.id`. Browser dipakai pada profil Chrome Imam untuk login, menu, form, pencarian, mobile 375px/tablet 768px/desktop 1440px, logout dan login ulang. Penantian navigasi ditambahkan pada pemeriksaan login ulang; screenshot full-page mobile diganti capture viewport setelah timeout alat. Ini keterbatasan otomasi yang telah ditangani, bukan kegagalan halaman.
+
+Bukti JSON: `tests/artifacts/production-smoke-results.json`, `production-browser-results.json`, dan `coolify-resource-comparison.json`. Screenshot dashboard/form/isolasi/runtime disimpan lokal pada direktori artefak yang diabaikan Git. Detail resource, volume, hak database, perbaikan, status akun, serta batas operasional tersedia di **DEPLOYMENT_REPORT.md**. Suite bisnis browser 53, PDF 24, dan MDI 7 tetap merupakan hasil lokal terdahulu; tidak dihitung sebagai pengujian ulang di produksi.
