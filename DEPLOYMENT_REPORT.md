@@ -132,3 +132,9 @@ Toggle mata MDI lokal pada login admin, login pelanggan, password dan konfirmasi
 Runtime 46e285a86b20bbfa23d067eae28805e7cdeed6e0 dirilis ke resource Faeyza yang sama melalui Chrome profil Imam. Deployment yf0uerxbz8a5nc5qml7jifxl Success dalam 2 menit 4 detik; database khusus Healthy dan web Started. Tidak ada migrasi atau perubahan compose/volume/resource lain.
 
 Konsumen dari halaman detail sekarang tetap pada form pesanan, tanpa dropdown/Tambah konsumen. Backend memvalidasi konteks pada GET/POST dan menolak ID pemilik yang berbeda. Form umum tetap menyediakan pemilihan konsumen. Regresi lokal 207 native/HTTP + 124 browser PASS; produksi 40 HTTP + 9 browser PASS. Simon → Servis baru diperiksa tanpa submit pesanan/koreksi data nyata. Screenshot locked-production-simon.png dan rincian hasil ada pada TEST_REPORT.md.
+
+## Label barang, merek, model pada rincian
+
+Runtime 65ee1c7e5a2bb754bd86ba57bf09be0c332e7191 dirilis ke resource Faeyza yang sama; deployment 1s09t6hj7bs7kd2ycyid6re0 Success dalam 27 detik. Template detail servis kini memuat baris Nama barang, Merek dan Model untuk pelanggan/admin/halaman sukses. Tidak ada perubahan skema, data servis, konfigurasi atau resource lain.
+
+Regresi 214 native/HTTP + 14 browser pelanggan PASS. Produksi 40 HTTP + 3 rincian data PASS; pesanan Speaker Aktif Bluetooth / Harman Kardon / Onyx 5 diperiksa read-only melalui admin. Pengujian browser pelanggan normal/custom 375/768/1440 dilakukan di database testing. Bukti pada TEST_REPORT.md.

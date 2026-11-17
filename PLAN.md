@@ -98,4 +98,5 @@ Status deployment: COMPLETE. Kedua container healthy, admin login/logout/login u
 - [x] Tambahkan baris Nama barang, Merek, dan Model pada detail servis/halaman sukses.
 - [x] Tetap memakai nilai pesanan dan output escaping; tampilan admin memakai rincian yang sama.
 - [x] Regresi 214 native/HTTP PASS termasuk data custom, XSS, dan kepemilikan.
-- [ ] Pemeriksaan browser/responsif, rilis, dan verifikasi produksi.
+- [x] 14 browser PASS pada akun pelanggan, termasuk data normal/custom di 375/768/1440px.
+- [x] Runtime 65ee1c7 dirilis; produksi 40 HTTP + 3 rincian data PASS tanpa perubahan data servis.
