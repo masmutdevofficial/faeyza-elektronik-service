@@ -33,7 +33,13 @@ function current_user(): ?array {
 }
 function require_login(): array { $u=current_user(); if (!$u) redirect('login'); return $u; }
 function require_admin(): array { $u=require_login(); if ($u['role']!=='admin') abort_page(403); return $u; }
-function abort_page(int $status): never { http_response_code($status); $title=(string)$status; $user=current_user(); $errorCode=$status; require ROOT.'/views/error.php'; exit; }
+function abort_page(int $status): never {
+    http_response_code($status);
+    // Apache needs an explicit reason phrase for this non-standard expiry code.
+    if ($status===419) header('HTTP/1.1 419 Page Expired', true, 419);
+    $title=(string)$status; $user=current_user(); $errorCode=$status;
+    require ROOT.'/views/error.php'; exit;
+}
 function flash(string $message): void { $_SESSION['flash']=$message; }
 function render(string $view, array $data=[]): void { extract($data); $user=current_user(); require ROOT.'/views/'.$view.'.php'; }
 function request_value(array $data, string $name, mixed $default=''): mixed { return $data[$name]??$default; }
