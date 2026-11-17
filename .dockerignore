@@ -12,7 +12,10 @@
 !public/**
 !database/
 !database/schema.sql
+!database/migrations/
+!database/migrations/**
 !bin/
 !bin/setup.php
 !bin/create-admin.php
 !bin/doctor.php
+!bin/migrate.php

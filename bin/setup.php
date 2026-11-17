@@ -11,5 +11,6 @@ try {
     $c->select_db($name);
     $c->multi_query(file_get_contents(ROOT.'/database/schema.sql'));
     do { if($res=$c->store_result())$res->free(); } while($c->more_results() && $c->next_result());
-    echo 'Migrasi v1 siap: '.$name.PHP_EOL;
+    require ROOT.'/app/Migrations.php'; Migrations::apply();
+    echo 'Migrasi v2 siap: '.$name.PHP_EOL;
 } catch(Throwable $e) { fwrite(STDERR,'Setup gagal ('.get_class($e).', '.$e->getCode().'). Periksa konfigurasi DB dan izin CREATE/ALTER.'.PHP_EOL); exit(1); }

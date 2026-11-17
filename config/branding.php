@@ -14,6 +14,7 @@ return [
     'city' => 'Bekasi',
     'invoice_heading' => 'PENYEDIA JASA REPARASI ELEKTRONIK',
     'invoice_signatory' => 'Bpk. Asmat',
+    'invoice_signature' => 'config/assets/faeyza-ttd.png',
     'invoice_terms' => [
         'Pengambilan barang servisan harus disertai nota.',
         'Jika tidak diambil dalam waktu 2 bulan, barang servisan di luar tanggung jawab kami.',

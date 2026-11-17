@@ -14,7 +14,7 @@ COPY config/ config/
 COPY views/ views/
 COPY public/ public/
 COPY database/ database/
-COPY bin/setup.php bin/create-admin.php bin/doctor.php bin/
+COPY bin/setup.php bin/create-admin.php bin/doctor.php bin/migrate.php bin/
 COPY docker/web-entrypoint.sh /usr/local/bin/faeyza-entrypoint
 RUN mkdir -p storage/logs storage/sessions \
     && chown -R www-data:www-data storage \

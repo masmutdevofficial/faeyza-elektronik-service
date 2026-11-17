@@ -53,6 +53,7 @@ export async function runBrowserE2E({tab,viewport,fixture,save,base='http://127.
     const invoice=await text('h1');check('13 format invoice otomatis',/^INV-\d{8}-\d{3,}$/.test(invoice));
     const orderId=new URL(await currentUrl()).searchParams.get('id');
     await link('Cetak invoice');check('13 invoice awal biaya -',(await text('[data-testid="total-cost"]'))==='-');
+    check('14 invoice awal tanpa tanda tangan',await tab.playwright.locator('[data-testid="workshop-signature"]').count()===0);
     check('10 tombol cetak tersedia',await tab.playwright.locator('[data-print]').isVisible());
     check('12 invoice mobile tanpa overflow',await tab.playwright.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await save('invoice-mobile-initial.jpg');
     await size(1440);await goto('order&id='+orderId);await click('Keluar');await login(fixture.admin_phone);check('13 login admin',(await currentUrl()).includes('dashboard'));await save('admin-desktop.jpg');
@@ -66,11 +67,19 @@ export async function runBrowserE2E({tab,viewport,fixture,save,base='http://127.
     check('13 penggunaan 2 stok menjadi 8',(await text('.allocation-list')).includes('Tersedia 8 pcs'));await tab.reload();check('13 refresh stok tetap 8',(await text('.allocation-list')).includes('Tersedia 8 pcs'));
     await link('Edit servis');const day=await tab.playwright.locator('[name="received_date"]').getAttribute('value');
     const warranty=new Date(day+'T12:00:00Z');warranty.setUTCDate(warranty.getUTCDate()+30);const warrantyDate=warranty.toISOString().slice(0,10);
-    await fill('total_cost','150000');await tab.playwright.locator('[name="status"]').selectOption('Selesai');await fill('completed_date',day);await fill('warranty_date',warrantyDate);await fill('technician_notes','Penggantian kapasitor. Perangkat normal setelah pengujian.');await click('Simpan perubahan');
+    check('14 toggle tersembunyi sebelum selesai',!await tab.playwright.getByRole('switch',{name:'Tampilkan tanda tangan bengkel',exact:true}).isVisible());
+    await fill('total_cost','150000');await tab.playwright.locator('[name="status"]').selectOption('Selesai');await fill('completed_date',day);await fill('warranty_date',warrantyDate);await fill('technician_notes','Penggantian kapasitor. Perangkat normal setelah pengujian.');
+    check('14 selesai memunculkan toggle aktif secara default',await tab.playwright.getByRole('switch',{name:'Tampilkan tanda tangan bengkel',exact:true}).isVisible()&&await tab.playwright.evaluate(()=>document.querySelector('input[type="checkbox"][name="show_workshop_signature"]').checked));
+    await click('Simpan perubahan');
     check('13 admin menyelesaikan servis Rp150.000',(await text('.badge'))==='Selesai'&&(await text('[data-testid="total-cost"]'))==='Rp150.000');
+    await link('Edit servis');await tab.playwright.getByRole('switch',{name:'Tampilkan tanda tangan bengkel',exact:true}).uncheck();await click('Simpan perubahan');
+    await goto('invoice&id='+orderId);check('14 toggle nonaktif menghilangkan tanda tangan',await tab.playwright.locator('[data-testid="workshop-signature"]').count()===0);
+    await goto('service-edit&id='+orderId);check('14 pilihan nonaktif bertahan setelah reload',await tab.playwright.evaluate(()=>!document.querySelector('input[type="checkbox"][name="show_workshop_signature"]').checked));
+    await tab.playwright.getByRole('switch',{name:'Tampilkan tanda tangan bengkel',exact:true}).check();await click('Simpan perubahan');await goto('invoice&id='+orderId);
+    check('14 tanda tangan kembali dan gambar termuat',await tab.playwright.evaluate(()=>document.querySelector('[data-testid="workshop-signature"]')?.naturalWidth>0));await save('invoice-signature-desktop.jpg');
     await goto('part&id='+partId);check('07 histori stok memuat pembelian dan penggunaan',(await text('tbody')).includes('Pembelian simulasi E2E')&&(await text('tbody')).includes('Penyesuaian penggunaan'));await save('stock-history-desktop.jpg');
     await click('Keluar');await login(phone);await goto('invoices');await fill('q',invoice);await click('Cari');check('13 konsumen mencari invoice sendiri',(await text('.service-cards')).includes(invoice)&&(await text('.service-cards')).includes('Selesai'));
-    await link('Lihat invoice '+invoice);check('13 invoice final Rp150.000',(await text('[data-testid="total-cost"]'))==='Rp150.000');check('13 invoice memuat garansi',(await text('main')).includes(warrantyDate.split('-').reverse().join('/')));await save('invoice-final-desktop.jpg');
+    await link('Lihat invoice '+invoice);check('13 invoice final Rp150.000',(await text('[data-testid="total-cost"]'))==='Rp150.000');check('13 invoice memuat garansi',(await text('main')).includes(warrantyDate.split('-').reverse().join('/')));check('14 konsumen melihat tanda tangan yang dipilih admin',await tab.playwright.locator('[data-testid="workshop-signature"]').count()===1);await save('invoice-final-desktop.jpg');
     await goto('invoice&id='+fixture.other_order);check('13 IDOR invoice lain ditolak',(await text('main')).includes('404'));await save('idor-denied.jpg');
     for(const width of [375,768,1440]) {await responsive('dashboard',width);await save('customer-dashboard-'+width+'.jpg');await responsive('invoice&id='+orderId,width);}
     await size(1440);await goto('dashboard');await click('Keluar');await login(fixture.admin_phone);

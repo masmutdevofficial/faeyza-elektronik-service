@@ -9,7 +9,7 @@ $accessories=json_decode($order['accessories'],true);
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?=e($title)?> · <?=e($b['name'])?></title>
-    <link rel="stylesheet" href="assets/invoice.css">
+    <link rel="stylesheet" href="assets/invoice.css?v=3">
     <link rel="stylesheet" href="assets/print.css">
     <script src="assets/app.js" defer></script>
 </head>
@@ -94,7 +94,7 @@ $accessories=json_decode($order['accessories'],true);
         </section>
         <table class="nota-table nota-signatures" aria-label="Tanda tangan penerimaan">
             <thead><tr><th scope="col">Konsumen</th><th scope="col">Pihak bengkel</th></tr></thead>
-            <tbody><tr><td><?=e($order['customer_name'])?></td><td><?=e($b['invoice_signatory']?:$b['short_name'])?></td></tr></tbody>
+            <tbody><tr><td><?=e($order['customer_name'])?></td><td><?php if(Orders::signatureVisible($order) && !empty($b['invoice_signature']) && is_file(ROOT.'/'.$b['invoice_signature'])): ?><img class="workshop-signature" data-testid="workshop-signature" src="data:image/png;base64,<?=base64_encode(file_get_contents(ROOT.'/'.$b['invoice_signature']))?>" alt="Tanda tangan pihak bengkel"><?php endif; ?><span><?=e($b['invoice_signatory']?:$b['short_name'])?></span></td></tr></tbody>
         </table>
     </div>
     <footer class="nota-footer">Dokumen ini diterbitkan oleh <?=e($b['name'])?> · <?=e($order['invoice_number'])?></footer>

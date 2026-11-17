@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS service_orders (
  completed_date DATE NULL,
  warranty_date DATE NULL,
  total_cost DECIMAL(14,2) NULL,
+ show_workshop_signature TINYINT NOT NULL DEFAULT 1 CHECK (show_workshop_signature IN (0,1)),
  revision INT UNSIGNED NOT NULL DEFAULT 1,
  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

@@ -30,6 +30,8 @@ Masukkan password unik minimal 12 karakter melalui stdin privat ketika diminta. 
 
 ## Verifikasi dan pemeliharaan
 
+Migrasi v2 menambahkan `service_orders.show_workshop_signature` dengan default 1. Pada DB lama, lakukan backup dan jalankan `php bin/migrate.php --only-db=faeyza_service` dengan akun migrasi Faeyza yang memiliki ALTER/INSERT sebelum merilis kode baru. Jangan menambah hak runtime. CLI menolak target yang tidak cocok dengan DB_NAME, memakai advisory lock, memeriksa keberadaan kolom, dan aman dijalankan ulang. Database Docker baru sudah memuat kolom dari schema.sql. Aset tanda tangan berada di config/assets, bukan public; image web harus dibangun ulang agar aset tersedia.
+
 1. Periksa Deployment Logs, status kedua service, dan `php bin/doctor.php`.
 2. Buka domain HTTPS, login/registrasi, cek secure cookie, dan pastikan `.env`, `/app`, `/database`, `/storage`, `/tests` tidak dapat diunduh.
 3. Lakukan smoke test menggunakan data sintetis yang jelas berlabel uji. Jangan menjalankan reset-test atau seed pada produksi.

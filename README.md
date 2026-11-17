@@ -4,6 +4,10 @@ Aplikasi manajemen penerimaan/perbaikan elektronik, PHP native 8.2+, MySQLi prep
 
 Deployment Docker/Coolify: lihat [DEPLOYMENT.md](DEPLOYMENT.md). Database produksi memakai container dan volume khusus Faeyza, terpisah dari database lokal maupun aplikasi lain.
 
+Tanda tangan bengkel diatur per pesanan melalui **Edit servis → Pengerjaan & biaya**. Toggle muncul untuk status **Selesai / Sudah Diambil**, default aktif. Simpan perubahan untuk menerapkannya pada invoice dan cetak. Gambar asli disimpan privat di `config/assets/faeyza-ttd.png`; konfigurasi berada pada `invoice_signature` di branding.php. File tidak disajikan langsung melalui URL publik.
+
+Pembaruan database lama: backup dahulu, gunakan akun migrasi yang memiliki ALTER pada database Faeyza, lalu jalankan `php bin/migrate.php --only-db=NAMA_DATABASE`. Target harus sama dengan DB_NAME. Migrasi v2 hanya menambahkan kolom `show_workshop_signature` (default 1) dan mencatat versi. `bin/setup.php` menjalankan migrasi untuk instalasi baru maupun skema lama. Akun runtime tidak perlu diberi hak ALTER.
+
 **Produksi aktif:** https://faeyza.dirgasatya.id — [repository privat GitHub](https://github.com/masmutdevofficial/faeyza-elektronik-service). Hasil deployment dan pemeriksaan aktual tersedia di [DEPLOYMENT_REPORT.md](DEPLOYMENT_REPORT.md). Admin produksi dibuat secara terpisah dengan persetujuan pemilik; kredensial privat tidak tersimpan dalam repository. Coolify disetel untuk deployment manual.
 
 ## Hasil lokal pada komputer ini

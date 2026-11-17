@@ -49,6 +49,8 @@ body.invoice-body{margin:0;background:#edf0f3;color:var(--nota-ink);font:12px Ar
 .nota-terms p{font-size:11px}
 .nota-signatures th{font-size:10px}
 .nota-signatures td{height:125px;text-align:center;vertical-align:bottom;padding:10px 6px;font-weight:bold;font-size:11px}
+.nota-signatures .workshop-signature{display:block;width:120px;height:76px;object-fit:contain;margin:0 auto 2px;break-inside:avoid}
+.nota-signatures td>span{display:block}
 .nota-footer{margin-top:20px;padding-top:8px;border-top:1px solid #dce2e7;text-align:center;font-size:8px;color:#64717c}
 @media screen and (max-width:600px){
  .print-toolbar{gap:8px;margin:16px auto}.print-toolbar>span{display:none}.button{padding:10px 13px}

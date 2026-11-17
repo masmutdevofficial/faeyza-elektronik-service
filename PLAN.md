@@ -36,3 +36,13 @@ Status deployment: COMPLETE. Kedua container healthy, admin login/logout/login u
 - [x] Validasi membuka bagian kontak yang invalid; menu admin dapat ditutup dengan Escape.
 - [x] Regresi 111 native/HTTP dan 56 pemeriksaan browser lulus, termasuk simulasi bisnis dan viewport 375/768/1440.
 - [x] Rilis UI ke resource Coolify Faeyza dan verifikasi produksi: f6d9ea1, HTTP 30/30 PASS, antrean baru dan empty state diperiksa di domain aktif.
+
+## Tanda tangan bengkel per pesanan
+
+- [x] Aset asli PNG privat, konfigurasi terpusat, dan gambar di invoice/cetak.
+- [x] Toggle admin khusus edit servis selesai/diambil; default aktif; preferensi tersimpan per pesanan.
+- [x] Validasi backend, CSRF, otorisasi, dan penolakan manipulasi konsumen.
+- [x] Migrasi v2 lokal/development/testing, uji pengulangan dan guard target.
+- [x] Regresi 125 native/HTTP, 63 browser, 26 cetak/PDF, serta interaksi toggle mobile lulus.
+- [x] Backup privat dan penambahan kolom hanya pada database produksi Faeyza; jumlah pesanan tetap.
+- [ ] Rilis dan verifikasi produksi tanda tangan.

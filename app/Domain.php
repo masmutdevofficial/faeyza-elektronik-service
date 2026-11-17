@@ -125,10 +125,18 @@ final class Orders {
         if (in_array($status,['Selesai','Sudah Diambil'],true) && !$done) throw new ValidationException('Tanggal selesai wajib untuk servis selesai/diambil.');
         if ($done && $done<$fields['received_date']) throw new ValidationException('Tanggal selesai tidak boleh sebelum tanggal masuk.');
         if ($warranty && (!$done || $warranty<$done)) throw new ValidationException('Garansi harus setelah atau sama dengan tanggal selesai.');
-        return ['status'=>$status,'completed_date'=>$done,'warranty_date'=>$warranty,'total_cost'=>Validate::decimal($d['total_cost']??null),'technician_notes'=>Validate::text($d,'technician_notes',4000,false)];
+        $values=['status'=>$status,'completed_date'=>$done,'warranty_date'=>$warranty,'total_cost'=>Validate::decimal($d['total_cost']??null),'technician_notes'=>Validate::text($d,'technician_notes',4000,false)];
+        if (array_key_exists('show_workshop_signature',$d)) {
+            $visible=Validate::integer($d['show_workshop_signature'],0,1);
+            if (in_array($status,['Selesai','Sudah Diambil'],true)) $values['show_workshop_signature']=$visible;
+        }
+        return $values;
+    }
+    public static function signatureVisible(array $order): bool {
+        return in_array($order['status'],['Selesai','Sudah Diambil'],true) && (int)($order['show_workshop_signature']??1)===1;
     }
     public static function create(array $d,array $actor): int {
-        if ($actor['role']!=='admin') foreach(['total_cost','status','completed_date','warranty_date','technician_notes','invoice_number','role','customer_id'] as $key) if (array_key_exists($key,$d)) throw new ValidationException('Kolom khusus admin tidak boleh dikirim konsumen.');
+        if ($actor['role']!=='admin') foreach(['total_cost','status','completed_date','warranty_date','technician_notes','invoice_number','role','customer_id','show_workshop_signature'] as $key) if (array_key_exists($key,$d)) throw new ValidationException('Kolom khusus admin tidak boleh dikirim konsumen.');
         $key=Validate::key($d['submission_key']??''); $fields=self::fields($d);
         if ($actor['role']==='admin') {
             $customer=Database::one('SELECT id FROM customers WHERE id=?',[Validate::integer($d['customer_id']??'',1)]);

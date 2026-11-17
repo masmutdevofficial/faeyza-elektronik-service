@@ -43,7 +43,7 @@ try {
     verify(http('/index.php?page%5B%5D=invalid')['status']===404,'Malformed route rejected safely');
     $bad=http('/index.php?page=login','POST',['csrf'=>$match[1]??'','phone'=>"' OR 1=1 --",'password'=>'InvalidSmokePassword']);
     verify($bad['status']===422 && !str_contains(strtolower($bad['body']),'mysqli_sql_exception'),'Invalid login handled without SQL disclosure');
-    foreach(['/.env','/app/bootstrap.php','/config/branding.php','/database/schema.sql','/bin/setup.php','/storage/logs/php.log','/tests/run.php','/.git/config']as $path) {
+    foreach(['/.env','/app/bootstrap.php','/config/branding.php','/config/assets/faeyza-ttd.png','/database/schema.sql','/bin/setup.php','/storage/logs/php.log','/tests/run.php','/.git/config']as $path) {
         $r=http($path); verify(in_array($r['status'],[403,404],true) && !str_contains($r['body'],'<?php'),'Private source blocked: '.$path);
     }
     verify(http('/assets/app.css')['status']===200,'Application stylesheet available');

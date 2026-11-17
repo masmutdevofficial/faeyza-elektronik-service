@@ -38,6 +38,14 @@
 .pagination .mdi-icon{width:16px;height:16px}
 
 
+.signature-setting{display:flex;align-items:center;justify-content:space-between;gap:18px;border-top:1px solid var(--line);padding-top:20px}
+.signature-setting[hidden]{display:none}.signature-setting strong{display:block;font-size:14px}.signature-setting small{display:block;color:var(--muted);margin-top:3px;font-size:12px}
+.signature-switch{position:relative;display:inline-flex;align-items:center;min-height:44px;min-width:52px;cursor:pointer}
+.signature-switch input[type=checkbox]{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer;z-index:1}
+.signature-switch>span{display:block;width:48px;height:28px;border-radius:20px;background:#a3afbd;transition:background .15s}
+.signature-switch>span:after{content:'';display:block;width:22px;height:22px;margin:3px;border-radius:50%;background:#fff;box-shadow:0 1px 3px #0002;transition:transform .15s}
+.signature-switch input:checked+span{background:var(--primary)}.signature-switch input:checked+span:after{transform:translateX(20px)}
+.signature-switch input:focus-visible+span{outline:3px solid #85b7f4;outline-offset:3px}
 /* Interface: navigation, records, and actions without promotional content. */
 :root{--ink:#182a40;--muted:#627185;--line:#dfe5ec;--bg:#f5f6f8;--radius:10px;--shadow:none}
 body{font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:var(--ink)}

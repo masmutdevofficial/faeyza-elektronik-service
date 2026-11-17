@@ -20,9 +20,11 @@ for name in ('invoice-initial', 'invoice-final', 'invoice-long'):
         f'10 {name} syarat dan tanda tangan tersedia': all(label in text for label in ('Syarat dan ketentuan','Pihak bengkel','Pengambilan barang')),
     }
     if name == 'invoice-initial':
+        checks['14 invoice belum selesai tanpa gambar tanda tangan'] = sum(len(page.images) for page in doc.pages) == 1
         checks['10 invoice awal biaya belum ditetapkan'] = 'Biaya belum ditetapkan' in text
         checks['10 invoice standar satu halaman'] = len(doc.pages) == 1
     if name == 'invoice-final':
+        checks['14 invoice selesai mencetak gambar tanda tangan'] = sum(len(page.images) for page in doc.pages) >= 2
         checks['10 invoice final biaya Rupiah dan garansi'] = 'Rp150.000' in text and expected_warranty in text
         checks['10 invoice final satu halaman'] = len(doc.pages) == 1
     if name == 'invoice-long':

@@ -34,3 +34,14 @@ document.querySelectorAll('[data-custom-select]').forEach(select => {
   select.addEventListener('change', update); update();
 });
 document.querySelectorAll('[data-print]').forEach(button => button.addEventListener('click', () => window.print()));
+const signatureSetting = document.querySelector('[data-signature-setting]');
+const serviceStatus = document.querySelector('select[name="status"]');
+if (signatureSetting && serviceStatus) {
+  const updateSignature = () => {
+    const complete = ['Selesai', 'Sudah Diambil'].includes(serviceStatus.value);
+    signatureSetting.hidden = !complete;
+    signatureSetting.querySelectorAll('input').forEach(input => { input.disabled = !complete; });
+  };
+  serviceStatus.addEventListener('change', updateSignature);
+  updateSignature();
+}

@@ -6,6 +6,7 @@ if [[ "${MARIADB_DATABASE}" != "faeyza_service" || "${MARIADB_USER}" != "faeyza_
     exit 1
 fi
 docker_process_sql --database=faeyza_service <<'SQL'
+INSERT IGNORE INTO schema_migrations(version) VALUES (2);
 REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'faeyza_runtime'@'%';
 GRANT SELECT, INSERT, UPDATE ON `faeyza_service`.* TO 'faeyza_runtime'@'%';
 SQL
