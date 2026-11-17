@@ -114,3 +114,9 @@ Runtime 983638100e309e6f070715d5ebedfe67a5bebf1c dirilis manual ke resource Faey
 Servis baru admin mengambil nama/HP/alamat dari konsumen terpilih; koreksi kontak opsional. Invoice mencetak www.faeyzateknik.com dan penanda tangan Asmat. Pemeriksaan produksi read-only: 31 HTTP dan 8 browser PASS. Pemilihan Indra diperiksa tanpa submit; invoice yang sudah ada dibuka untuk memastikan website/nama benar. Semua pengajuan simulasi hanya dibuat pada database testing. Detail regresi lokal 134 native/HTTP, 70 browser, 32 PDF berada di TEST_REPORT.md.
 
 Pembaruan berikutnya: runtime 64dc7c9723d9386709899234dcab9f09c78381cc membawa konteks konsumen dari halaman detail ke servis baru. Deployment 09cpbx2mfvswbufowmy42e1u Success, 34 detik, hanya resource Faeyza yang sama. Tidak ada perubahan skema/compose/volume/kredensial. Regresi lokal 144 native/HTTP + 73 browser PASS, produksi 31 HTTP + 8 browser PASS. Alur Indra benar-benar diklik tanpa submit; pilihan dan kontak tetap benar setelah reload. Tombol servis baru pada riwayat berisi juga diverifikasi.
+
+## Pengaturan nomor dan password
+
+Runtime ad00792136c6e20452d56eac45cd5e2dd9696f84 dirilis melalui Chrome profil Imam ke resource Faeyza yang sama. Deployment ivakvdcmcd0wlrpuchclzw6q Success dalam 37 detik. Admin dapat mengganti nomor unik/password sendiri dan mereset password pelanggan; pelanggan dapat mengganti password sendiri. Minimum enam karakter konsisten pada UI/backend/CLI.
+
+Tidak ada migrasi atau perubahan compose/database/volume/kredensial produksi. Stamp sesi yang terikat pada kredensial mencabut sesi lama; pengguna versi sebelumnya perlu login kembali sekali, tanpa perubahan password. Admin produksi berhasil login ulang dengan kredensial yang sama, membuka Akun serta form reset Indra. Tidak ada perubahan kredensial produksi yang dikirim untuk pengujian. Local 186 native/HTTP + 90 browser PASS; produksi 34 HTTP + 14 browser PASS, 0 FAIL. Bukti dan batas verifikasi pada TEST_REPORT.md.

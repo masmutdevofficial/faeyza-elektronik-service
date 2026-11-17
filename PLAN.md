@@ -72,4 +72,5 @@ Status deployment: COMPLETE. Kedua container healthy, admin login/logout/login u
 - [x] Minimum 6 karakter pada registrasi, tambah akun, pengaturan dan CLI.
 - [x] CSRF, role, hash password, rate limit verifikasi, konfirmasi password, dan pencabutan sesi lama.
 - [x] Regresi 186 native/HTTP PASS pada database testing terpisah, termasuk rehash login dan pembaruan sesi atomik.
-- [ ] Verifikasi browser/responsif dan rilis ke resource Faeyza.
+- [x] Regresi 90 browser PASS, termasuk seluruh halaman baru pada 375/768/1440px.
+- [x] Rilis runtime ad00792 ke resource Faeyza; produksi 34 HTTP + 14 browser PASS, tanpa perubahan kredensial produksi.
