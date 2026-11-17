@@ -126,3 +126,9 @@ Tidak ada migrasi atau perubahan compose/database/volume/kredensial produksi. St
 Runtime 7870e1cf12efd551410562bda61fe20e7114f30c dirilis manual melalui profil Imam ke resource Faeyza yang sama. Deployment slm1k1prlfr1g6qj5egzvcot Success dalam 29 detik. Entry public/admin/index.php bekerja dengan DirectoryIndex Apache tanpa perubahan konfigurasi/mod_rewrite; /admin diteruskan ke /admin/. Pelanggan tetap memakai index.php?page=login. Login memverifikasi role dan logout admin kembali ke /admin/.
 
 Toggle mata MDI lokal pada login admin, login pelanggan, password dan konfirmasi registrasi telah dioperasikan di domain HTTPS. Default/reload tersembunyi, tampil/sembunyi mandiri dan tidak submit. Login/logout admin aktual lulus. Produksi 40 HTTP + 22 browser PASS, termasuk viewport 375/768/1440, tanpa console error. Lokal 203 native/HTTP + 120 browser + 9 tata letak PASS. Tidak ada migrasi, perubahan data pesanan/kredensial, compose, volume atau resource aplikasi lain. Bukti pada TEST_REPORT.md.
+
+## Pesanan dari detail konsumen tanpa dropdown
+
+Runtime 46e285a86b20bbfa23d067eae28805e7cdeed6e0 dirilis ke resource Faeyza yang sama melalui Chrome profil Imam. Deployment yf0uerxbz8a5nc5qml7jifxl Success dalam 2 menit 4 detik; database khusus Healthy dan web Started. Tidak ada migrasi atau perubahan compose/volume/resource lain.
+
+Konsumen dari halaman detail sekarang tetap pada form pesanan, tanpa dropdown/Tambah konsumen. Backend memvalidasi konteks pada GET/POST dan menolak ID pemilik yang berbeda. Form umum tetap menyediakan pemilihan konsumen. Regresi lokal 207 native/HTTP + 124 browser PASS; produksi 40 HTTP + 9 browser PASS. Simon → Servis baru diperiksa tanpa submit pesanan/koreksi data nyata. Screenshot locked-production-simon.png dan rincian hasil ada pada TEST_REPORT.md.

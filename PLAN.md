@@ -90,4 +90,5 @@ Status deployment: COMPLETE. Kedua container healthy, admin login/logout/login u
 - [x] Pemilik mengikuti konteks server pada GET/POST; perbedaan hidden ID ditolak tanpa penyimpanan.
 - [x] Koreksi kontak tetap bekerja; Kembali menuju detail konsumen; form umum tetap memiliki dropdown.
 - [x] Regresi 207 native/HTTP PASS, termasuk validasi gagal dan POST tanpa hidden ID.
-- [ ] Browser, rilis, dan verifikasi produksi.
+- [x] 124 browser PASS; rilis runtime 46e285a ke resource Faeyza.
+- [x] Produksi 40 HTTP + 9 browser PASS; alur Simon diverifikasi tanpa submit pesanan.
