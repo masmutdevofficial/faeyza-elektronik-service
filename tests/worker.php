@@ -1,0 +1,18 @@
+<?php
+declare(strict_types=1);
+putenv('APP_ENV=testing'); require dirname(__DIR__).'/app/bootstrap.php';
+[$file,$mode,$uid,$order,$part,$target,$barrier]=$argv;
+while(microtime(true)<(float)$barrier) usleep(1000);
+try {
+    $actor=Database::one('SELECT * FROM users WHERE id=?',[$uid]);
+    if($mode==='invoice') {
+        $c=Orders::customer($actor);
+        $submission=preg_match('/^[a-f0-9]{64}$/D',$target)?$target:token();
+        $id=Orders::create(['submission_key'=>$submission,'received_date'=>'2026-11-17','customer_name'=>$c['name'],'contact_phone'=>$c['phone'],'address'=>$c['address'],'item_name'=>'TV','brand'=>'SONY','model'=>'Concurrent','accessories'=>[],'complaint'=>'Uji request bersamaan','location'=>'Bengkel'],$actor);
+        echo json_encode(['ok'=>true,'invoice'=>Orders::get($id,$actor)['invoice_number']]);
+    } else {
+        Inventory::allocate((int)$order,(int)$part,(int)$target,0,$actor);
+        echo json_encode(['ok'=>true]);
+    }
+} catch(ValidationException $e){ echo json_encode(['ok'=>false,'error'=>$e->getMessage()]); }
+catch(Throwable $e){ echo json_encode(['ok'=>false,'exception'=>get_class($e),'code'=>$e->getCode()]); exit(1); }

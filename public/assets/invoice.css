@@ -1,0 +1,66 @@
+:root{--nota-blue:#a4c8f2;--nota-line:#424a53;--nota-ink:#161a1e}
+*{box-sizing:border-box}
+.mdi-icon{display:inline-block;width:18px;height:18px;fill:currentColor;vertical-align:middle;flex-shrink:0;pointer-events:none}
+.button{gap:7px}
+body.invoice-body{margin:0;background:#edf0f3;color:var(--nota-ink);font:12px Arial,Helvetica,sans-serif;line-height:1.4}
+.print-toolbar{width:min(210mm,calc(100% - 32px));margin:22px auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.print-toolbar>span{font-size:12px;color:#596773}
+.button{display:inline-flex;justify-content:center;align-items:center;min-height:44px;padding:11px 17px;border:1px solid #13568d;border-radius:7px;background:#13568d;color:#fff;font:600 12px Arial,sans-serif;text-decoration:none;cursor:pointer}
+.button.secondary{background:#fff;border-color:#cdd7df;color:#24465c}
+.button:focus-visible{outline:3px solid #8cbfff;outline-offset:3px}
+.invoice-paper{width:min(210mm,calc(100% - 32px));min-height:297mm;padding:12mm 10mm;margin:0 auto 28px;background:#fff;box-shadow:0 4px 24px #23374a15;overflow-wrap:anywhere}
+.nota-header{display:grid;grid-template-columns:23% 47% 30%;align-items:center;gap:0;margin-bottom:12px}
+.nota-logo img{display:block;width:100%;height:100px;object-fit:contain}
+.nota-logo strong{color:#175b93;font-size:24px}
+.nota-business{text-align:center;padding:0 7px}
+.nota-business h1{margin:0 0 6px;color:#08779c;font-size:18px;font-weight:700;line-height:1.2}
+.nota-business p{margin:4px 0;font-size:10px;line-height:1.4}
+.nota-business .nota-subtitle{font-size:10px;font-weight:bold}
+.nota-business .nota-phone{font-size:12px;font-weight:bold}
+.nota-document{padding-left:13px;align-self:stretch;display:flex;flex-direction:column;justify-content:space-between}
+.nota-document p{margin:4px 0 10px;font-size:10px}
+.nota-document h2{margin:0;background:linear-gradient(#b6d6f3,#80b9df);border:1px solid #80aaca;text-align:center;padding:20px 8px;font-size:17px;letter-spacing:.5px;line-height:1.2;font-weight:800}
+.nota-meta{display:flex;justify-content:space-between;gap:12px;margin:0 0 8px;font-size:10px}
+.nota-table{width:100%;border:1px solid var(--nota-line);border-collapse:collapse;table-layout:fixed;text-align:left;white-space:normal;font-size:11px}
+.nota-table th{background:var(--nota-blue);border:1px solid var(--nota-line);padding:5px 7px;color:#111;text-align:center;font-size:11px;font-weight:700;letter-spacing:0}
+.nota-table td{padding:13px 7px;border:1px solid var(--nota-line);vertical-align:top;line-height:1.5;overflow-wrap:anywhere}
+.nota-table td p{margin:0 0 4px}
+.nota-intake{margin-bottom:23px}
+.nota-intake tbody td{height:113px}
+.nota-contact-phone{margin-top:15px!important}
+.nota-fields{margin:0}
+.nota-fields>div{display:grid;grid-template-columns:100px minmax(0,1fr);gap:3px;align-items:baseline;margin:0 0 3px}
+.nota-fields dt,.nota-fields dd{margin:0;min-width:0}
+.nota-fields dd:before{content:': ';white-space:pre}
+.nota-work{margin-bottom:18px}
+.nota-work tbody td{height:130px}
+.nota-work .nota-fields>div{grid-template-columns:107px minmax(0,1fr)}
+.nota-cost-lines>div{grid-template-columns:135px minmax(0,1fr)!important}
+.nota-cost-total{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:27px;font-weight:bold}
+.nota-cost-total strong{white-space:nowrap;font-size:16px}
+.nota-unset{font-size:10px;color:#5a6570;margin-top:6px!important}
+.nota-notes{border:1px solid var(--nota-line);padding:10px 7px;min-height:49px;margin-bottom:20px;font-size:11px}
+.nota-notes p{margin:0 0 5px;line-height:1.5}
+.nota-notes p:last-child{margin-bottom:0}
+.nota-bottom{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,1fr);gap:18px;align-items:start}
+.nota-terms h3{font-size:13px;margin:1px 0 11px}
+.nota-terms ul{padding-left:17px;margin:0;font-size:11px;line-height:1.5}
+.nota-terms li{padding-left:1px;margin:0 0 3px}
+.nota-terms p{font-size:11px}
+.nota-signatures th{font-size:10px}
+.nota-signatures td{height:125px;text-align:center;vertical-align:bottom;padding:10px 6px;font-weight:bold;font-size:11px}
+.nota-footer{margin-top:20px;padding-top:8px;border-top:1px solid #dce2e7;text-align:center;font-size:8px;color:#64717c}
+@media screen and (max-width:600px){
+ .print-toolbar{gap:8px;margin:16px auto}.print-toolbar>span{display:none}.button{padding:10px 13px}
+ .invoice-paper{padding:22px 16px;min-height:0}
+ .nota-header{grid-template-columns:1fr 2fr;gap:10px;margin-bottom:13px}
+ .nota-logo img{height:100px}.nota-business{padding:0}.nota-business h1{font-size:15px}.nota-business p{font-size:10px}.nota-business .nota-phone{font-size:11px}
+ .nota-document{grid-column:1/-1;padding:0;flex-direction:row;align-items:center;gap:12px}.nota-document p{margin:0}.nota-document h2{padding:12px 14px;font-size:14px}
+ .nota-meta{flex-direction:column;gap:4px;margin-bottom:12px}
+ .nota-intake thead,.nota-work thead{display:none}
+ .nota-intake,.nota-work,.nota-intake tbody,.nota-work tbody,.nota-intake tr,.nota-work tr{display:block;width:100%}
+ .nota-intake td,.nota-work td{display:block;width:100%;height:auto!important;padding:0 10px 12px;border-top:0}
+ .nota-intake td:before,.nota-work td:before{content:attr(data-heading);display:block;background:var(--nota-blue);font-weight:bold;text-align:center;border-top:1px solid var(--nota-line);border-bottom:1px solid var(--nota-line);margin:0 -10px 10px;padding:6px}
+ .nota-contact-phone{margin-top:10px!important}.nota-fields>div,.nota-work .nota-fields>div{grid-template-columns:100px minmax(0,1fr)}
+ .nota-bottom{grid-template-columns:1fr;gap:16px}.nota-signatures td{height:110px}.nota-footer{line-height:1.5}
+}

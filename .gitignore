@@ -1,0 +1,10 @@
+.env
+.env.testing
+/storage/logs/*
+/storage/sessions/*
+!/storage/logs/.gitkeep
+!/storage/sessions/.gitkeep
+/tests/artifacts/*
+!/tests/artifacts/.gitkeep
+/tests/local-*.json
+/output/

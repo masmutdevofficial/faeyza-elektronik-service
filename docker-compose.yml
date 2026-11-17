@@ -1,0 +1,65 @@
+# Coolify: Git repository application, Compose build strategy.
+# Keep "Connect to predefined network" OFF. No external network/volume or host port.
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      APP_ENV: production
+      APP_URL: ${SERVICE_URL_WEB}
+      SESSION_SECURE: "true"
+      DB_HOST: database
+      DB_PORT: "3306"
+      DB_NAME: faeyza_service
+      DB_USER: faeyza_runtime
+      DB_PASSWORD: ${SERVICE_PASSWORD_FAEYZADB}
+    volumes:
+      - faeyza-storage:/var/www/html/storage
+    depends_on:
+      database:
+        condition: service_healthy
+    mem_limit: 256m
+    cpus: 0.50
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+  database:
+    build:
+      context: .
+      dockerfile: docker/database/Dockerfile
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: faeyza_service
+      MARIADB_USER: faeyza_runtime
+      MARIADB_PASSWORD: ${SERVICE_PASSWORD_FAEYZADB}
+      MARIADB_ROOT_PASSWORD: ${SERVICE_PASSWORD_FAEYZAROOT}
+      MARIADB_ROOT_HOST: localhost
+      TZ: Asia/Jakarta
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --innodb-buffer-pool-size=128M
+      - --max-connections=40
+      - --performance-schema=OFF
+    volumes:
+      - faeyza-db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 60s
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    mem_limit: 384m
+    cpus: 0.50
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+volumes:
+  faeyza-db:
+  faeyza-storage:

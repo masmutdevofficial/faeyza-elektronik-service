@@ -1,0 +1,148 @@
+<?php
+declare(strict_types=1);
+$page=$_GET['page']??'dashboard';
+if (!is_string($page)) abort_page(404);
+$routes=['login','register','logout','dashboard','orders','invoices','service-new','service-edit','order','invoice','success','customers','customer','customer-new','customer-edit','parts','part','part-new','part-edit'];
+if (!in_array($page,$routes,true)) abort_page(404);
+$method=$_SERVER['REQUEST_METHOD'];
+if (!in_array($method,['GET','POST'],true)) { header('Allow: GET, POST'); abort_page(405); }
+$user=current_user();
+if (!in_array($page,['login','register'],true)) $user=require_login();
+$adminRoutes=['customers','customer','customer-new','customer-edit','parts','part','part-new','part-edit','service-edit'];
+if (in_array($page,$adminRoutes,true)) $user=require_admin();
+if ($method==='POST' && (!isset($_POST['csrf']) || !is_string($_POST['csrf']) || !hash_equals($_SESSION['csrf'],$_POST['csrf']))) abort_page(419);
+$id=isset($_GET['id']) && is_string($_GET['id']) && ctype_digit($_GET['id']) ? (int)$_GET['id'] : 0;
+$error=''; $data=$method==='POST'?$_POST:[];
+if (in_array($page,['login','register'],true)) {
+    if ($user) redirect('dashboard');
+    if ($method==='POST') {
+        try {
+            if ($page==='register') {
+                if (Validate::password($_POST,'password',10)!==Validate::password($_POST,'password_confirm',10)) throw new ValidationException('Konfirmasi password tidak sama.');
+                $uid=Auth::register($_POST);
+            } else {
+                $auth=Auth::login(Validate::text($_POST,'phone',40),Validate::password($_POST,'password',1),$_SERVER['REMOTE_ADDR']??'unknown');
+                $uid=(int)$auth['id'];
+            }
+            session_regenerate_id(true); $_SESSION=['user_id'=>$uid,'csrf'=>token(),'last_seen'=>time()]; redirect('dashboard');
+        } catch(ValidationException $e) { $error=$e->getMessage(); http_response_code(422); }
+    }
+    render('auth',compact('page','data','error')); return;
+}
+if ($page==='logout') {
+    if ($method!=='POST') { header('Allow: POST'); abort_page(405); }
+    $_SESSION=[];
+    $cookie=session_get_cookie_params();
+    setcookie(session_name(),'', ['expires'=>time()-42000,'path'=>$cookie['path'],'secure'=>$cookie['secure'],'httponly'=>true,'samesite'=>'Lax']);
+    session_destroy(); redirect('login');
+}
+if ($page==='dashboard') {
+    if ($method!=='GET') abort_page(405);
+    $filter=$user['role']==='admin'?'':' JOIN customers c ON c.id=s.customer_id WHERE c.user_id=?';
+    $params=$user['role']==='admin'?[]:[$user['id']];
+    $stats=Database::one("SELECT COUNT(*) total,COALESCE(SUM(status='Menunggu Konfirmasi'),0) waiting,COALESCE(SUM(status IN ('Diterima','Dalam Pengerjaan','Menunggu Sparepart')),0) working,COALESCE(SUM(status IN ('Selesai','Sudah Diambil')),0) done FROM service_orders s".$filter,$params);
+    $customers= $user['role']==='admin' ? Database::one('SELECT COUNT(*) n FROM customers')['n'] : null;
+    $low= $user['role']==='admin' ? Database::one('SELECT COUNT(*) n FROM spare_parts WHERE stock<=minimum_stock')['n'] : null;
+    $recent=array_slice(Orders::listing($user),0,6);
+    render('dashboard',compact('stats','customers','low','recent')); return;
+}
+if (in_array($page,['orders','invoices'],true)) {
+    if ($method!=='GET') abort_page(405);
+    try { $q=Validate::text($_GET,'q',150,false); $status=Validate::text($_GET,'status',40,false); } catch(ValidationException) { abort_page(400); }
+    $p=max(1,min(100000,(int)(is_scalar($_GET['p']??1)?($_GET['p']??1):1)));
+    $orders=Orders::listing($user,$q,$status?:null,$p);
+    render('orders',compact('orders','page','q','status','p')); return;
+}
+if (in_array($page,['order','invoice','success'],true)) {
+    if ($method!=='GET') abort_page(405);
+    $order=Orders::get($id,$user); if (!$order) abort_page(404);
+    if ($page==='invoice') { render('invoice',compact('order')); return; }
+    $parts=[]; $available=[];
+    if ($user['role']==='admin') {
+        $parts=Database::all('SELECT sop.*,p.name,p.sku,p.unit,p.stock FROM service_order_parts sop JOIN spare_parts p ON p.id=sop.spare_part_id WHERE sop.service_order_id=? ORDER BY p.name',[$id]);
+        $available=Database::all('SELECT p.*,COALESCE(sop.quantity,0) allocated FROM spare_parts p LEFT JOIN service_order_parts sop ON sop.spare_part_id=p.id AND sop.service_order_id=? ORDER BY p.name',[$id]);
+    }
+    render('order',compact('order','page','parts','available','error')); return;
+}
+// Penggunaan sparepart dikirim ke service-edit, selalu berotorisasi admin.
+if ($page==='service-new' || $page==='service-edit') {
+    $editing=$page==='service-edit';
+    $order=$editing?Orders::get($id,$user):null;
+    if ($editing && !$order) abort_page(404);
+    if ($method==='POST') {
+        try {
+            $action=Validate::text($_POST,'action',30,false);
+            if ($editing && $action==='allocate') {
+                Inventory::allocate($id,Validate::integer($_POST['part_id']??'',1),Validate::integer($_POST['quantity']??''),Validate::integer($_POST['expected']??''),$user);
+                flash('Penggunaan sparepart disimpan. Stok dan histori telah diperbarui.'); redirect('order',['id'=>$id]);
+            }
+            if ($editing) { Orders::update($id,$_POST,$user); flash('Perubahan servis berhasil disimpan.'); redirect('order',['id'=>$id]); }
+            $newId=Orders::create($_POST,$user); redirect('success',['id'=>$newId]);
+        } catch(ValidationException $e) {
+            $error=$e->getMessage(); http_response_code(422);
+            if ($editing && ($_POST['action']??'')==='allocate') {
+                $parts=Database::all('SELECT sop.*,p.name,p.sku,p.unit,p.stock FROM service_order_parts sop JOIN spare_parts p ON p.id=sop.spare_part_id WHERE sop.service_order_id=?',[$id]);
+                $available=Database::all('SELECT p.*,COALESCE(sop.quantity,0) allocated FROM spare_parts p LEFT JOIN service_order_parts sop ON sop.spare_part_id=p.id AND sop.service_order_id=? ORDER BY p.name',[$id]);
+                render('order',compact('order','page','parts','available','error')); return;
+            }
+        }
+    } else {
+        $profile=Orders::customer($user);
+        $data=$order??['received_date'=>Clock::today(),'customer_name'=>$profile['name']??'','contact_phone'=>$profile['phone']??'','address'=>$profile['address']??'','location'=>'Bengkel','status'=>'Diterima'];
+        $data['submission_key']=token();
+        if ($order) $data['accessories']=json_decode($order['accessories'],true);
+    }
+    $customers=$user['role']==='admin'?Database::all('SELECT c.id,c.name,u.phone FROM customers c JOIN users u ON u.id=c.user_id ORDER BY c.name'):[];
+    render('service-form',compact('data','editing','error','id','customers')); return;
+}
+if ($page==='customers') {
+    if ($method!=='GET') abort_page(405);
+    try { $q=Validate::text($_GET,'q',150,false); } catch(ValidationException) { abort_page(400); }
+    $phone=$q; try{$phone=Validate::phone($q);}catch(ValidationException){}
+    $p=max(1,min(100000,(int)(is_scalar($_GET['p']??1)?($_GET['p']??1):1)));
+    $customers=Database::all('SELECT c.*,u.phone,(SELECT COUNT(*) FROM service_orders s WHERE s.customer_id=c.id) total FROM customers c JOIN users u ON u.id=c.user_id WHERE c.name LIKE ? OR u.phone LIKE ? ORDER BY c.id DESC LIMIT 20 OFFSET '.(($p-1)*20),['%'.$q.'%','%'.$phone.'%']);
+    render('customers',compact('customers','q','p')); return;
+}
+if (in_array($page,['customer','customer-edit','customer-new'],true)) {
+    $editing=$page!=='customer-new';
+    $customer=$editing?Database::one('SELECT c.*,u.phone FROM customers c JOIN users u ON u.id=c.user_id WHERE c.id=?',[$id]):null;
+    if ($editing && !$customer) abort_page(404);
+    if ($page==='customer') {
+        if ($method!=='GET') abort_page(405);
+        $orders=Database::all('SELECT * FROM service_orders WHERE customer_id=? ORDER BY id DESC LIMIT 100',[$id]); render('customer',compact('customer','orders')); return;
+    }
+    if ($method==='POST') {
+        try { $saved=Customers::save($editing?$id:null,$_POST,$user); if (!$editing) $saved=(int)Database::one('SELECT id FROM customers WHERE user_id=?',[$saved])['id']; flash('Informasi konsumen berhasil disimpan.'); redirect('customer',['id'=>$saved]); }
+        catch(ValidationException $e) { $error=$e->getMessage(); http_response_code(422); }
+    } else $data=$customer??[];
+    render('customer-form',compact('data','editing','error','id')); return;
+}
+if ($page==='parts') {
+    if ($method!=='GET') abort_page(405);
+    try { $q=Validate::text($_GET,'q',150,false); } catch(ValidationException) { abort_page(400); }
+    $p=max(1,min(100000,(int)(is_scalar($_GET['p']??1)?($_GET['p']??1):1)));
+    $low=($_GET['low']??'')==='1';
+    $parts=Database::all('SELECT * FROM spare_parts WHERE (sku LIKE ? OR name LIKE ?)'.($low?' AND stock<=minimum_stock':'').' ORDER BY id DESC LIMIT 20 OFFSET '.(($p-1)*20),['%'.$q.'%','%'.$q.'%']);
+    render('parts',compact('parts','q','p','low')); return;
+}
+if (in_array($page,['part','part-new','part-edit'],true)) {
+    $editing=$page!=='part-new';
+    $part=$editing?Database::one('SELECT * FROM spare_parts WHERE id=?',[$id]):null;
+    if ($editing && !$part) abort_page(404);
+    if ($method==='POST') {
+        try {
+            if ($page==='part') {
+                Inventory::receive($id,Validate::integer($_POST['quantity']??'',1),Validate::text($_POST,'reason',180),Validate::key($_POST['operation_key']??''),$user);
+                flash('Stok masuk berhasil dicatat.'); redirect('part',['id'=>$id]);
+            }
+            $saved=Inventory::save($editing?$id:null,$_POST,$user); flash('Data sparepart berhasil disimpan.'); redirect('part',['id'=>$saved]);
+        } catch(ValidationException $e) { $error=$e->getMessage(); http_response_code(422); }
+    } else $data=$part??['minimum_stock'=>3,'unit'=>'pcs'];
+    if ($page==='part') {
+        $p=max(1,min(100000,(int)(is_scalar($_GET['p']??1)?($_GET['p']??1):1)));
+        $movements=Database::all('SELECT m.*,s.invoice_number,u.phone actor_phone FROM stock_movements m LEFT JOIN service_orders s ON s.id=m.service_order_id JOIN users u ON u.id=m.actor_id WHERE m.spare_part_id=? ORDER BY m.id DESC LIMIT 20 OFFSET '.(($p-1)*20),[$id]);
+        $data['operation_key']??=token(); render('part',compact('part','movements','data','error','p')); return;
+    }
+    render('part-form',compact('data','editing','error','id')); return;
+}
+abort_page(404);
