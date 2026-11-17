@@ -153,6 +153,10 @@ Rate limit login: maksimal 8 percobaan per nomor dan per IP dalam jendela 15 men
 
 Riwayat hasil aktual dan batas verifikasi tersedia di TEST_REPORT.md. Pengujian lokal memakai PHP development server dan MariaDB nyata; Apache produksi kemudian dijalankan dan diverifikasi pada container Coolify, lihat DEPLOYMENT_REPORT.md. XAMPP/shared hosting konvensional tidak dijalankan dalam sesi ini.
 
+## Pesanan dari detail konsumen
+
+Untuk pesanan dari **Konsumen → detail konsumen → Servis baru**, pemilik pesanan sudah ditetapkan. Form menampilkan ringkasan kontak tanpa dropdown atau tautan Tambah konsumen. Koreksi kontak penerimaan tetap tersedia; tombol Kembali menuju detail konsumen yang sama. Backend menolak customer_id berbeda pada POST formulir ini. Form **Servis baru dari menu umum** tetap menyediakan dropdown konsumen.
+
 ## Pengaturan akun dan password
 
 Login admin menggunakan **/admin** (Apache meneruskan ke /admin/), sedangkan login pelanggan tetap **index.php?page=login**. Akun admin hanya dapat login melalui formulir admin dan akun pelanggan melalui formulir pelanggan. Endpoint administrasi untuk tamu serta logout admin mengarah ke /admin/. Tidak ada registrasi admin publik. Folder public/admin harus ikut disalin saat deployment, termasuk pada XAMPP/shared hosting; fitur ini tidak membutuhkan mod_rewrite. Aset dan tautan mengikuti direktori aplikasi.

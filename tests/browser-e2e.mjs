@@ -115,8 +115,17 @@ export async function runBrowserE2E({tab,viewport,fixture,save,base='http://127.
     check('17 tombol detail membawa ID konsumen',contextHref.includes('customer_id='));
     await link('Servis baru');
     check('17 konsumen dari detail sudah terpilih',await text('[data-contact-name]')===contextName);
+    check('20 form dari detail tidak memiliki dropdown konsumen',await tab.playwright.locator('[data-customer-picker]').count()===0&&await tab.playwright.locator('[data-customer-locked]').count()===1);
     await tab.reload();
-    check('17 pilihan awal bertahan setelah reload',await tab.playwright.evaluate(()=>{const option=document.querySelector('[data-customer-picker]').selectedOptions[0];return !!option.value&&document.querySelector('[data-contact-name]').textContent===option.dataset.customerName&&!document.querySelector('[data-customer-preview]').hidden;}));
+    check('17 konsumen terkunci bertahan setelah reload',await text('[data-contact-name]')===contextName&&await tab.playwright.locator('[data-customer-picker]').count()===0);
+    await tab.playwright.locator('[data-customer-editor] summary').click();await fill('customer_name','Koreksi kontak QA');
+    check('20 koreksi kontak tetap memperbarui ringkasan tanpa dropdown',await text('[data-contact-name]')==='Koreksi kontak QA');await fill('customer_name',contextName);
+    await tab.playwright.locator('[data-customer-editor] summary').click();
+    await size(375);await tab.playwright.locator('[data-customer-preview]').click();await save('locked-customer-mobile.jpg');
+    check('20 form khusus konsumen 375px tanpa overflow',await tab.playwright.evaluate(()=>innerWidth===375&&document.documentElement.scrollWidth<=innerWidth));
+    await tab.playwright.locator('[name="item_name"]').selectOption('TV');await tab.playwright.locator('[name="brand"]').selectOption('LG');await fill('model','Pesanan konteks QA');await fill('complaint','Uji pesanan tanpa dropdown');await click('Kirim pengajuan servis');
+    check('20 pengajuan khusus konsumen berhasil tanpa memilih ulang',(await currentUrl()).includes('success')&&(await text('main')).includes(contextName));
+    await goto('service-new');
     const customerOptions=await tab.playwright.locator('[data-customer-picker]').evaluate(el=>[...el.options].filter(o=>o.value).map(o=>({id:o.value,name:o.dataset.customerName,phone:o.dataset.customerPhone,address:o.dataset.customerAddress})));
     await tab.playwright.locator('[data-customer-picker]').selectOption(customerOptions[0].id);
     check('15 pilihan konsumen langsung mengisi tiga kontak',await tab.playwright.evaluate(()=>{const option=document.querySelector('[data-customer-picker]').selectedOptions[0];return document.querySelector('[name="customer_name"]').value===option.dataset.customerName&&document.querySelector('[name="address"]').value===option.dataset.customerAddress&&document.querySelector('[data-contact-phone]').textContent===option.dataset.customerPhone;}));

@@ -83,3 +83,11 @@ Status deployment: COMPLETE. Kedua container healthy, admin login/logout/login u
 - [x] Regresi 203 native/HTTP PASS setelah perbaikan path Windows.
 - [x] 120 browser + 9 tata letak PASS; rilis runtime 7870e1c ke resource Faeyza.
 - [x] Produksi 40 HTTP + 22 browser PASS, termasuk login/logout admin aktual dan ketiga halaman pada 375/768/1440px.
+
+## Form khusus konsumen tanpa dropdown
+
+- [x] Form dari detail konsumen hanya menampilkan kontak; hapus dropdown dan Tambah konsumen.
+- [x] Pemilik mengikuti konteks server pada GET/POST; perbedaan hidden ID ditolak tanpa penyimpanan.
+- [x] Koreksi kontak tetap bekerja; Kembali menuju detail konsumen; form umum tetap memiliki dropdown.
+- [x] Regresi 207 native/HTTP PASS, termasuk validasi gagal dan POST tanpa hidden ID.
+- [ ] Browser, rilis, dan verifikasi produksi.

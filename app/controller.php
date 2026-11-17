@@ -94,6 +94,13 @@ if ($page==='service-new' || $page==='service-edit') {
     $editing=$page==='service-edit';
     $order=$editing?Orders::get($id,$user):null;
     if ($editing && !$order) abort_page(404);
+    $lockedCustomer=null;
+    if ($user['role']==='admin' && !$editing && array_key_exists('customer_id',$_GET)) {
+        try { $selectedCustomerId=Validate::integer($_GET['customer_id'],1); }
+        catch(ValidationException) { abort_page(400); }
+        $lockedCustomer=Database::one('SELECT c.id,c.name,c.address,u.phone FROM customers c JOIN users u ON u.id=c.user_id WHERE c.id=?',[$selectedCustomerId]);
+        if (!$lockedCustomer) abort_page(404);
+    }
     if ($method==='POST') {
         try {
             $action=Validate::text($_POST,'action',30,false);
@@ -102,7 +109,12 @@ if ($page==='service-new' || $page==='service-edit') {
                 flash('Penggunaan sparepart disimpan. Stok dan histori telah diperbarui.'); redirect('order',['id'=>$id]);
             }
             if ($editing) { Orders::update($id,$_POST,$user); flash('Perubahan servis berhasil disimpan.'); redirect('order',['id'=>$id]); }
-            $newId=Orders::create($_POST,$user); redirect('success',['id'=>$newId]);
+            $submission=$_POST;
+            if ($lockedCustomer) {
+                if (array_key_exists('customer_id',$submission) && Validate::integer($submission['customer_id'],1)!==(int)$lockedCustomer['id']) throw new ValidationException('Konsumen pesanan tidak sesuai dengan halaman yang dibuka.');
+                $submission['customer_id']=$lockedCustomer['id'];
+            }
+            $newId=Orders::create($submission,$user); redirect('success',['id'=>$newId]);
         } catch(ValidationException $e) {
             $error=$e->getMessage(); http_response_code(422);
             if ($editing && ($_POST['action']??'')==='allocate') {
@@ -117,22 +129,17 @@ if ($page==='service-new' || $page==='service-edit') {
         $data['submission_key']=token();
         if ($order) $data['accessories']=json_decode($order['accessories'],true);
     }
-    $customers=$user['role']==='admin'?Database::all('SELECT c.id,c.name,c.address,u.phone FROM customers c JOIN users u ON u.id=c.user_id ORDER BY c.name'):[];
-    if ($user['role']==='admin' && !$editing && $method==='GET' && array_key_exists('customer_id',$_GET)) {
-        try { $selectedCustomerId=Validate::integer($_GET['customer_id'],1); }
-        catch(ValidationException) { abort_page(400); }
-        if (!in_array($selectedCustomerId,array_map(fn($customer)=>(int)$customer['id'],$customers),true)) abort_page(404);
-        $data['customer_id']=$selectedCustomerId;
-    }
+    $customers=$user['role']==='admin' && !$editing && !$lockedCustomer?Database::all('SELECT c.id,c.name,c.address,u.phone FROM customers c JOIN users u ON u.id=c.user_id ORDER BY c.name'):[];
+    if ($lockedCustomer) $data['customer_id']=$lockedCustomer['id'];
     if ($user['role']==='admin' && !$editing) {
-        foreach($customers as $customer) if(($data['customer_id']??'')==$customer['id']) {
+        foreach($lockedCustomer?[$lockedCustomer]:$customers as $customer) if(($data['customer_id']??'')==$customer['id']) {
             foreach(['customer_name'=>'name','contact_phone'=>'phone','address'=>'address'] as $field=>$source) {
                 if (!array_key_exists($field,$data) || (is_string($data[$field]) && trim($data[$field])==='')) $data[$field]=$customer[$source];
             }
             break;
         }
     }
-    render('service-form',compact('data','editing','error','id','customers')); return;
+    render('service-form',compact('data','editing','error','id','customers','lockedCustomer')); return;
 }
 if ($page==='customers') {
     if ($method!=='GET') abort_page(405);
