@@ -92,3 +92,10 @@ Status deployment: COMPLETE. Kedua container healthy, admin login/logout/login u
 - [x] Regresi 207 native/HTTP PASS, termasuk validasi gagal dan POST tanpa hidden ID.
 - [x] 124 browser PASS; rilis runtime 46e285a ke resource Faeyza.
 - [x] Produksi 40 HTTP + 9 browser PASS; alur Simon diverifikasi tanpa submit pesanan.
+
+## Rincian perangkat pada halaman pelanggan
+
+- [x] Tambahkan baris Nama barang, Merek, dan Model pada detail servis/halaman sukses.
+- [x] Tetap memakai nilai pesanan dan output escaping; tampilan admin memakai rincian yang sama.
+- [x] Regresi 214 native/HTTP PASS termasuk data custom, XSS, dan kepemilikan.
+- [ ] Pemeriksaan browser/responsif, rilis, dan verifikasi produksi.

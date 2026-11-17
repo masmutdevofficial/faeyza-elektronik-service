@@ -257,9 +257,10 @@ try {
     check(Orders::get($custom,$a)['item_name']==='Mesin kopi' && str_contains(Orders::get($custom,$a)['accessories'],'Tas perangkat'),'02 barang merk kelengkapan custom berfungsi');
     require __DIR__.'/accounts.php';
     require __DIR__.'/auth-pages.php';
+    require __DIR__.'/device-details.php';
     // Fixture untuk browser: hanya testing, password acak tidak ditulis ke laporan.
     Database::query('DELETE FROM login_limits');
-    file_put_contents(__DIR__.'/local-fixtures.json',json_encode(['password'=>$password,'admin_phone'=>'08170002466','customer_phone'=>'081822233344','other_phone'=>'081911122233','own_order'=>$webOrder,'other_order'=>$ob,'part'=>$part],JSON_PRETTY_PRINT));
+    file_put_contents(__DIR__.'/local-fixtures.json',json_encode(['password'=>$password,'admin_phone'=>'08170002466','customer_phone'=>'081822233344','other_phone'=>'081911122233','own_order'=>$webOrder,'other_order'=>$ob,'part'=>$part,'own_device'=>$deviceExpected,'device_edge_order'=>$deviceEdgeId,'device_edge_expected'=>$deviceEdgeExpected],JSON_PRETTY_PRINT));
 } catch(Throwable $e) { check(false,'RUNTIME '.get_class($e).' '.$e->getMessage().' '.$e->getFile().':'.$e->getLine()); }
 $summary=['pass'=>count(array_filter($results,fn($r)=>$r['status']==='PASS')),'fail'=>count(array_filter($results,fn($r)=>$r['status']==='FAIL')),'blocked'=>0];
 file_put_contents(__DIR__.'/artifacts/integration-results.json',json_encode(['run_at'=>date(DATE_ATOM),'database'=>getenv('DB_NAME'),'summary'=>$summary,'results'=>$results],JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));
