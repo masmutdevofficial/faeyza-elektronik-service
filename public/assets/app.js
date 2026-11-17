@@ -34,6 +34,27 @@ document.querySelectorAll('[data-custom-select]').forEach(select => {
   select.addEventListener('change', update); update();
 });
 document.querySelectorAll('[data-print]').forEach(button => button.addEventListener('click', () => window.print()));
+const customerPicker = document.querySelector('[data-customer-picker]');
+if (customerPicker) {
+  const form = customerPicker.form;
+  const preview = form.querySelector('[data-customer-preview]');
+  const editor = form.querySelector('[data-customer-editor]');
+  const contactFields = {customer_name: 'customerName', contact_phone: 'customerPhone', address: 'customerAddress'};
+  const updateCustomer = (fill) => {
+    const option = customerPicker.selectedOptions[0];
+    const selected = !!option?.value;
+    if (fill) Object.entries(contactFields).forEach(([name,key]) => { form.elements[name].value = selected ? option.dataset[key] : ''; });
+    preview.hidden = !selected;
+    editor.hidden = !selected;
+    preview.querySelector('[data-contact-name]').textContent = form.elements.customer_name.value;
+    preview.querySelector('[data-contact-phone]').textContent = form.elements.contact_phone.value;
+    preview.querySelector('[data-contact-address]').textContent = form.elements.address.value;
+    if (fill) editor.open = false;
+  };
+  customerPicker.addEventListener('change', () => updateCustomer(true));
+  Object.keys(contactFields).forEach(name => form.elements[name].addEventListener('input', () => updateCustomer(false)));
+  updateCustomer(false);
+}
 const signatureSetting = document.querySelector('[data-signature-setting]');
 const serviceStatus = document.querySelector('select[name="status"]');
 if (signatureSetting && serviceStatus) {

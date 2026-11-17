@@ -146,3 +146,13 @@ Bukti: tests/artifacts/signature-integration-output.txt, signature-browser-resul
 
 Migrasi v2 diuji pada database lokal yang sudah ada serta database testing; eksekusi ulang berhasil dan target yang tidak cocok ditolak. Produksi dicadangkan terlebih dahulu pada volume Faeyza (file root-only), lalu hanya ditambahkan kolom pada service_orders dan versi migrasi. Jumlah pesanan sebelum/sesudah tetap sama. Tidak ada akun, password, kepemilikan, nomor invoice, biaya, atau stok yang diubah oleh migrasi.
 Verifikasi produksi tanda tangan: 31 HTTP PASS, termasuk penolakan URL langsung ke config/assets/faeyza-ttd.png. Doctor produksi menyatakan aset dan kolom tanda tangan OK; PHP log tidak memiliki error. Pratinjau UI pada pesanan asli Diterima memastikan toggle tersembunyi lalu checked saat pilihan Selesai, tanpa submit, dan status asli dikonfirmasi tetap Diterima. Jumlah data tetap 1 pesanan/3 user. Rilis runtime cdb42b5 sukses. Semua pengujian perubahan aktif/nonaktif yang menyimpan data dilakukan pada DB testing; bukti PDF dan UI memakai data uji.
+
+## Kontak otomatis dan identitas invoice
+
+Hasil lokal aktual: **134 native/HTTP PASS, 70 browser PASS, 32 PDF PASS, 0 FAIL, 0 BLOCKED**. Perintah: tests/test.ps1, runBrowserE2E dari tests/browser-e2e.mjs, tests/print.ps1. Lint PHP dan sintaks kedua file JavaScript lulus. Semua mutasi simulasi memakai faeyza_test, bukan produksi.
+
+Regresi meliputi pengajuan admin tanpa mengirim kontak, fallback field kosong, penolakan konsumen invalid/input array, koreksi kontak tanpa mengubah akun, pergantian konsumen, pembersihan pilihan, serta submit browser tanpa mengetik ulang nama/HP/alamat. Simulasi TV, stok 10 menjadi 8, biaya Rp150.000, status selesai, tanda tangan dan IDOR tetap lulus. Viewport 375/768/1440 diperiksa melalui ukuran CSS aktual dan scrollWidth.
+
+Tiga PDF nyata (awal, final, teks panjang) memastikan www.faeyzateknik.com tercetak, nama pihak bengkel Asmat tanpa Bpk., ukuran A4, tanpa navigasi, dan konten panjang tidak hilang. PNG invoice final diperiksa visual: website di header dan Asmat di bawah tanda tangan, satu halaman rapi.
+
+Pada percobaan browser pertama, pembacaan langsung nilai input tel disamarkan oleh alat sehingga assertion gagal walaupun kontak terisi. Pemeriksa diperbaiki untuk membandingkan nama/alamat serta teks HP pada ringkasan yang terlihat; submit sungguhan tetap diuji. Regresi browser kemudian 70/70 PASS. Bukti: tests/artifacts/contact-integration-output.txt, contact-browser-results.json, contact-print-output.txt, print-results.json, invoice-final-print-1.png.

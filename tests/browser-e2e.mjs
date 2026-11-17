@@ -83,6 +83,21 @@ export async function runBrowserE2E({tab,viewport,fixture,save,base='http://127.
     await goto('invoice&id='+fixture.other_order);check('13 IDOR invoice lain ditolak',(await text('main')).includes('404'));await save('idor-denied.jpg');
     for(const width of [375,768,1440]) {await responsive('dashboard',width);await save('customer-dashboard-'+width+'.jpg');await responsive('invoice&id='+orderId,width);}
     await size(1440);await goto('dashboard');await click('Keluar');await login(fixture.admin_phone);
+    await goto('service-new');
+    const customerOptions=await tab.playwright.locator('[data-customer-picker]').evaluate(el=>[...el.options].filter(o=>o.value).map(o=>({id:o.value,name:o.dataset.customerName,phone:o.dataset.customerPhone,address:o.dataset.customerAddress})));
+    await tab.playwright.locator('[data-customer-picker]').selectOption(customerOptions[0].id);
+    check('15 pilihan konsumen langsung mengisi tiga kontak',await tab.playwright.evaluate(()=>{const option=document.querySelector('[data-customer-picker]').selectedOptions[0];return document.querySelector('[name="customer_name"]').value===option.dataset.customerName&&document.querySelector('[name="address"]').value===option.dataset.customerAddress&&document.querySelector('[data-contact-phone]').textContent===option.dataset.customerPhone;}));
+    check('15 kontak tidak perlu diisi ulang',await tab.playwright.evaluate(()=>!document.querySelector('[data-customer-editor]').open&&!document.querySelector('[data-customer-preview]').hidden));
+    await tab.playwright.locator('[data-customer-editor] summary').click();await fill('customer_name','Kontak koreksi');
+    check('15 pratinjau mengikuti koreksi kontak',(await text('[data-contact-name]'))==='Kontak koreksi');
+    await tab.playwright.locator('[data-customer-picker]').selectOption(customerOptions[1].id);
+    check('15 mengganti konsumen mengganti seluruh kontak',await tab.playwright.evaluate(()=>{const option=document.querySelector('[data-customer-picker]').selectedOptions[0];return document.querySelector('[name="customer_name"]').value===option.dataset.customerName&&document.querySelector('[name="address"]').value===option.dataset.customerAddress&&document.querySelector('[data-contact-phone]').textContent===option.dataset.customerPhone;}));
+    await tab.playwright.locator('[data-customer-picker]').selectOption('');
+    check('15 pilihan kosong membersihkan kontak sebelumnya',await tab.playwright.evaluate(()=>!document.querySelector('[name="customer_name"]').value&&document.querySelector('[data-customer-preview]').hidden));
+    await tab.playwright.locator('[data-customer-picker]').selectOption(customerOptions[0].id);await size(375);
+    check('15 pemilihan konsumen mobile tanpa overflow',await tab.playwright.evaluate(()=>innerWidth===375&&document.documentElement.scrollWidth<=innerWidth));await tab.playwright.locator('[data-customer-preview]').click();await save('customer-autofill-mobile.jpg');
+    await tab.playwright.locator('[name="item_name"]').selectOption('TV');await tab.playwright.locator('[name="brand"]').selectOption('LG');await fill('model','Autofill QA');await fill('complaint','Uji pengisian kontak otomatis');await click('Kirim pengajuan servis');
+    check('15 pengajuan admin berhasil tanpa mengetik ulang kontak',(await text('main')).includes(customerOptions[0].name)&&(await currentUrl()).includes('success'));
     for(const width of [375,768,1440])for(const route of ['dashboard','orders','invoices','customers','parts','service-new','customer-new','part-new']) await responsive(route,width);
     await size(1440);await goto('dashboard');await save('admin-desktop.jpg');
     return {results,metrics,orderId,partId,invoice,warrantyDate};

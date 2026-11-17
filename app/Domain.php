@@ -137,10 +137,16 @@ final class Orders {
     }
     public static function create(array $d,array $actor): int {
         if ($actor['role']!=='admin') foreach(['total_cost','status','completed_date','warranty_date','technician_notes','invoice_number','role','customer_id','show_workshop_signature'] as $key) if (array_key_exists($key,$d)) throw new ValidationException('Kolom khusus admin tidak boleh dikirim konsumen.');
-        $key=Validate::key($d['submission_key']??''); $fields=self::fields($d);
+        $key=Validate::key($d['submission_key']??'');
         if ($actor['role']==='admin') {
-            $customer=Database::one('SELECT id FROM customers WHERE id=?',[Validate::integer($d['customer_id']??'',1)]);
+            $customer=Database::one('SELECT c.id,c.name,c.address,u.phone FROM customers c JOIN users u ON u.id=c.user_id WHERE c.id=?',[Validate::integer($d['customer_id']??'',1)]);
             if (!$customer) throw new ValidationException('Konsumen tidak ditemukan.');
+            foreach(['customer_name'=>'name','contact_phone'=>'phone','address'=>'address'] as $field=>$source) {
+                if (!array_key_exists($field,$d) || (is_string($d[$field]) && trim($d[$field])==='')) $d[$field]=$customer[$source];
+            }
+        }
+        $fields=self::fields($d);
+        if ($actor['role']==='admin') {
             $fields+=self::adminFields($d,$fields);
         } else { $customer=self::customer($actor); $fields+=['status'=>'Menunggu Konfirmasi','completed_date'=>null,'warranty_date'=>null,'total_cost'=>null,'technician_notes'=>'']; }
         if (!$customer) throw new ValidationException('Akun konsumen tidak ditemukan.');

@@ -63,7 +63,7 @@ Environment dibaca dari `.env` (atau `.env.testing` hanya dengan APP_ENV=testing
 
 `APP_ENV=production` menolak seeding. `SESSION_SECURE=true` pada HTTPS. `APP_URL` mendokumentasikan alamat deployment; route dan aset memakai URL relatif agar berfungsi dalam subfolder. Jam bisnis berasal dari server Asia/Jakarta; input tanggal masuk tidak mengubah tanggal penerbitan invoice. TEST_DATE hanya dipakai oleh proses dengan APP_ENV=testing, tidak diterima dari HTTP request.
 
-Ubah identitas di `config/branding.php`: nama, nama pendek, deskripsi, tagline, warna primary/accent, alamat, kontak, kota, website, catatan invoice, nama penanda tangan, syarat/ketentuan, dan path logo. Logo asli yang diberikan pemilik tersimpan tanpa modifikasi di `public/assets/faeyza-logo.jpg`, digunakan pada login, sidebar, dan nota. Alamat, nomor HP, serta penanda tangan Bpk. Asmat mengikuti referensi yang diberikan. Website dibiarkan kosong agar tidak menebak tulisan kecil pada gambar. Logo kosong kembali memakai identitas teks. Gunakan warna hex valid.
+Ubah identitas di `config/branding.php`: nama, nama pendek, deskripsi, tagline, warna primary/accent, alamat, kontak, kota, website, catatan invoice, nama penanda tangan, syarat/ketentuan, dan path logo. Logo asli yang diberikan pemilik tersimpan tanpa modifikasi di `public/assets/faeyza-logo.jpg`, digunakan pada login, sidebar, dan nota. Website invoice adalah `www.faeyzateknik.com` dan penanda tangan `Asmat`, sesuai permintaan pemilik. Logo kosong kembali memakai identitas teks. Gunakan warna hex valid.
 
 ## Penggunaan
 

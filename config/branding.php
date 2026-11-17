@@ -10,10 +10,10 @@ return [
     'primary_soft_color' => '#eaf2ff',
     'address' => 'Jln. H. Dehir No. 31, Jatiluhur, Jatiasih, Bekasi 17425',
     'phone' => '081 7000 2466',
-    'website' => '',
+    'website' => 'www.faeyzateknik.com',
     'city' => 'Bekasi',
     'invoice_heading' => 'PENYEDIA JASA REPARASI ELEKTRONIK',
-    'invoice_signatory' => 'Bpk. Asmat',
+    'invoice_signatory' => 'Asmat',
     'invoice_signature' => 'config/assets/faeyza-ttd.png',
     'invoice_terms' => [
         'Pengambilan barang servisan harus disertai nota.',

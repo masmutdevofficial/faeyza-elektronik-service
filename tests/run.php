@@ -139,6 +139,18 @@ try {
     $bProfile=Orders::customer($b);
     $adminOrder=Orders::create(fixture(['customer_id'=>$bProfile['id'],'status'=>'Diterima','total_cost'=>'0']),$admin);
     check(Orders::get($adminOrder,$b)!==null && Orders::get($adminOrder,$a)===null,'02 admin menambahkan servis terhubung pemilik sah');
+    $autoContact=fixture(['customer_id'=>$bProfile['id'],'status'=>'Diterima']);
+    foreach(['customer_name','contact_phone','address']as $field)unset($autoContact[$field]);
+    $autoOrder=Orders::create($autoContact,$admin);$autoRow=Orders::get($autoOrder,$admin);
+    check($autoRow['customer_name']===$bProfile['name'] && $autoRow['contact_phone']===$bProfile['phone'] && $autoRow['address']===$bProfile['address'],'15 admin memilih konsumen tanpa mengisi ulang kontak');
+    check(Orders::get($autoOrder,$b)!==null && Orders::get($autoOrder,$a)===null,'15 kontak otomatis tetap terhubung ke pemilik yang dipilih');
+    $blankOrder=Orders::create(fixture(['customer_id'=>$bProfile['id'],'status'=>'Diterima','customer_name'=>' ','contact_phone'=>'','address'=>' ']),$admin);
+    check(Orders::get($blankOrder,$admin)['customer_name']===$bProfile['name'],'15 kontak kosong memakai data konsumen di server');
+    $overrideOrder=Orders::create(fixture(['customer_id'=>$bProfile['id'],'status'=>'Diterima','customer_name'=>'Kontak penerimaan','address'=>'Alamat penerimaan lain']),$admin);
+    check(Orders::get($overrideOrder,$admin)['customer_name']==='Kontak penerimaan' && Orders::get($overrideOrder,$admin)['address']==='Alamat penerimaan lain','15 koreksi kontak penerimaan tetap didukung');
+    check(Orders::customer($b)['name']===$bProfile['name'] && Orders::customer($b)['address']===$bProfile['address'],'15 koreksi penerimaan tidak menimpa profil atau invoice lama');
+    rejects(fn()=>Orders::create(array_replace($autoContact,['customer_id'=>999999999]),$admin),'15 konsumen tidak ditemukan ditolak');
+    rejects(fn()=>Orders::create(array_replace($autoContact,['customer_name'=>['invalid']]),$admin),'15 kontak malformed tidak disamarkan oleh pengisian otomatis');
     rejects(fn()=>Customers::save((int)$bProfile['id'],['name'=>'Tidak tersimpan','phone'=>'081822233344','address'=>'Berubah'],$admin),'09 perubahan HP duplikat ditolak');
     check(Orders::customer($b)['name']==='Konsumen B','09 perubahan konsumen rollback bila nomor bentrok');
     $newPart=Database::one('SELECT * FROM spare_parts WHERE id=?',[$part]); Inventory::save($part,array_replace(partData('CAP-001'),['name'=>'Kapasitor terbaru','revision'=>$newPart['revision'],'stock'=>999]),$admin);
@@ -171,6 +183,7 @@ try {
     check($http->request('success','GET',[],['id'=>$webOrder])['code']===200,'02 halaman sukses dapat dibuka');
     $invoice=$http->request('invoice','GET',[],['id'=>$webOrder]);
     check($invoice['code']===200 && str_contains($invoice['body'],'data-testid="total-cost">-</strong>'),'06/10 invoice HTTP menampilkan biaya kosong -');
+    check(str_contains($invoice['body'],'www.faeyzateknik.com'),'15 website bengkel tercantum pada invoice');
     check(str_contains($invoice['body'],'&lt;script&gt;') && !str_contains($invoice['body'],$malicious),'11 invoice tidak mengeksekusi stored XSS');
     check(str_contains($invoice['body'],'assets/print.css') && str_contains($invoice['body'],'data-print') && !str_contains($invoice['body'],'class="sidebar"'),'10 invoice tanpa navigasi dan tombol cetak tersedia');
     $beforeRefresh=stock($part);$http->request('order','GET',[],['id'=>$webOrder]);$http->request('order','GET',[],['id'=>$webOrder]);check(stock($part)===$beforeRefresh,'07 refresh detail tidak mengurangi stok');
@@ -179,6 +192,11 @@ try {
     check($adminHttp->request('invoices','GET',[],['q'=>'081911122233'])['code']===200,'05 admin mencari HP ternormalisasi via HTTP');
     check($adminHttp->request('service-edit','POST',editData($webOrder,$admin,['csrf'=>'wrong']),['id'=>$webOrder])['code']===419,'11 perubahan admin tanpa CSRF benar ditolak');
     $csrf=$adminHttp->form('service-edit',['id'=>$webOrder]);
+    $httpAuto=fixture(['customer_id'=>$bProfile['id'],'status'=>'Diterima','csrf'=>$csrf]);
+    foreach(['customer_name','contact_phone','address']as $field)unset($httpAuto[$field]);
+    $httpAutoResponse=$adminHttp->request('service-new','POST',$httpAuto);
+    $httpAutoRow=Database::one('SELECT customer_name,contact_phone,address FROM service_orders WHERE submission_key=?',[$httpAuto['submission_key']]);
+    check($httpAutoResponse['code']===303 && $httpAutoRow['customer_name']===$bProfile['name'] && $httpAutoRow['address']===$bProfile['address'],'15 HTTP admin dapat submit hanya dengan memilih konsumen');
     $edit=editData($webOrder,$admin,['csrf'=>$csrf,'status'=>'Dalam Pengerjaan','total_cost'=>'0']);
     check($adminHttp->request('service-edit','POST',$edit,['id'=>$webOrder])['code']===303,'09 HTTP update servis admin');
     check(str_contains($http->request('invoice','GET',[],['id'=>$webOrder])['body'],'data-testid="total-cost">Rp0</strong>'),'06 konsumen melihat Rp0');

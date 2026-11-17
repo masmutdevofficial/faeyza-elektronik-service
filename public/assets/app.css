@@ -38,6 +38,10 @@
 .pagination .mdi-icon{width:16px;height:16px}
 
 
+.selected-customer{border:1px solid var(--line);border-left:3px solid var(--primary);border-radius:7px;padding:16px 18px;background:#f8faff;min-width:0;overflow-wrap:anywhere}
+.selected-customer[hidden],.customer-contact-editor[hidden]{display:none}
+.selected-customer strong,.selected-customer span{display:block}.selected-customer strong{font-size:15px}.selected-customer span{font-size:13px;color:var(--muted);margin-top:3px}.selected-customer p{font-size:13px;margin-top:8px;white-space:pre-line}
+.customer-contact-editor{border-top:1px solid var(--line)}.customer-contact-editor summary{font-size:13px;color:var(--primary)}.customer-contact-editor[open]>.form-grid{padding:12px 0 6px}
 .signature-setting{display:flex;align-items:center;justify-content:space-between;gap:18px;border-top:1px solid var(--line);padding-top:20px}
 .signature-setting[hidden]{display:none}.signature-setting strong{display:block;font-size:14px}.signature-setting small{display:block;color:var(--muted);margin-top:3px;font-size:12px}
 .signature-switch{position:relative;display:inline-flex;align-items:center;min-height:44px;min-width:52px;cursor:pointer}

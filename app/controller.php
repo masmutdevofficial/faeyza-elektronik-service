@@ -92,7 +92,15 @@ if ($page==='service-new' || $page==='service-edit') {
         $data['submission_key']=token();
         if ($order) $data['accessories']=json_decode($order['accessories'],true);
     }
-    $customers=$user['role']==='admin'?Database::all('SELECT c.id,c.name,u.phone FROM customers c JOIN users u ON u.id=c.user_id ORDER BY c.name'):[];
+    $customers=$user['role']==='admin'?Database::all('SELECT c.id,c.name,c.address,u.phone FROM customers c JOIN users u ON u.id=c.user_id ORDER BY c.name'):[];
+    if ($user['role']==='admin' && !$editing) {
+        foreach($customers as $customer) if(($data['customer_id']??'')==$customer['id']) {
+            foreach(['customer_name'=>'name','contact_phone'=>'phone','address'=>'address'] as $field=>$source) {
+                if (!array_key_exists($field,$data) || (is_string($data[$field]) && trim($data[$field])==='')) $data[$field]=$customer[$source];
+            }
+            break;
+        }
+    }
     render('service-form',compact('data','editing','error','id','customers')); return;
 }
 if ($page==='customers') {

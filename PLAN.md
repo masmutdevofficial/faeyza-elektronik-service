@@ -46,3 +46,13 @@ Status deployment: COMPLETE. Kedua container healthy, admin login/logout/login u
 - [x] Regresi 125 native/HTTP, 63 browser, 26 cetak/PDF, serta interaksi toggle mobile lulus.
 - [x] Backup privat dan penambahan kolom hanya pada database produksi Faeyza; jumlah pesanan tetap.
 - [x] Rilis cdb42b5 dan verifikasi produksi tanda tangan: HTTP 31/31, doctor/aset/kolom OK, preview toggle default aktif dan status pesanan asli tetap Diterima.
+
+## Kontak konsumen dan identitas invoice
+
+- [x] Pilihan konsumen pada servis baru admin otomatis mengisi nama, HP, dan alamat.
+- [x] Ringkasan kontak menggantikan pengisian ulang; koreksi opsional melalui Ubah data kontak.
+- [x] Backend mengambil kontak akun jika field tidak dikirim/kosong; kepemilikan tetap berdasarkan ID konsumen.
+- [x] Perubahan pilihan membersihkan kontak sebelumnya; koreksi manual dan input saat validasi gagal tetap dipertahankan.
+- [x] Website www.faeyzateknik.com dan nama penanda tangan Asmat pada invoice/cetak.
+- [x] Regresi 134 native/HTTP, 70 browser, 32 PDF PASS; layout A4 diperiksa visual.
+- [ ] Rilis ke resource Faeyza dan verifikasi produksi tanpa mengubah data pesanan.

@@ -15,6 +15,7 @@ for name in ('invoice-initial', 'invoice-final', 'invoice-long'):
         f'10 {name} ukuran A4': all(abs(float(p.mediabox.width) - 595.28) < 2 and abs(float(p.mediabox.height) - 841.89) < 2 for p in doc.pages),
         f'10 {name} navigasi dan tombol disembunyikan': 'Cetak invoice' not in text and 'Detail servis' not in text and 'Workspace' not in text,
         f'10 {name} konten identitas dan footer utuh': 'Faeyza Elektronik Service' in text and 'Dokumen ini diterbitkan' in text,
+        f'15 {name} website bengkel tercetak': 'www.faeyzateknik.com' in text,
         f'10 {name} logo asli tertanam': any(len(page.images) > 0 for page in doc.pages),
         f'10 {name} tabel sesuai referensi': all(label in text for label in ('NOTA SERVICE','Data Konsumen','Data Perangkat','Kelengkapan','Biaya')),
         f'10 {name} syarat dan tanda tangan tersedia': all(label in text for label in ('Syarat dan ketentuan','Pihak bengkel','Pengambilan barang')),
@@ -23,6 +24,7 @@ for name in ('invoice-initial', 'invoice-final', 'invoice-long'):
         checks['14 invoice belum selesai tanpa gambar tanda tangan'] = sum(len(page.images) for page in doc.pages) == 1
         checks['10 invoice awal biaya belum ditetapkan'] = 'Biaya belum ditetapkan' in text
         checks['10 invoice standar satu halaman'] = len(doc.pages) == 1
+    checks['16 nama pihak bengkel Asmat tanpa sapaan'] = 'Asmat' in text and 'Bpk.' not in text
     if name == 'invoice-final':
         checks['14 invoice selesai mencetak gambar tanda tangan'] = sum(len(page.images) for page in doc.pages) >= 2
         checks['10 invoice final biaya Rupiah dan garansi'] = 'Rp150.000' in text and expected_warranty in text
