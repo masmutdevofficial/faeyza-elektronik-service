@@ -63,4 +63,4 @@ Status deployment: COMPLETE. Kedua container healthy, admin login/logout/login u
 - [x] Form langsung memilih konsumen dan menampilkan kontak; pilihan masih dapat diganti.
 - [x] Tombol servis baru juga tersedia saat konsumen sudah memiliki riwayat.
 - [x] Validasi konteks GET, pemisahan dari POST, serta batas role diuji: 144 native/HTTP PASS.
-- [ ] Verifikasi browser, rilis, dan pemeriksaan domain aktif.
+- [x] Regresi 73 browser PASS; runtime 64dc7c9 dirilis; 31 HTTP dan 8 pemeriksaan browser produksi PASS tanpa submit pesanan.
