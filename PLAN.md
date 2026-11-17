@@ -45,4 +45,4 @@ Status deployment: COMPLETE. Kedua container healthy, admin login/logout/login u
 - [x] Migrasi v2 lokal/development/testing, uji pengulangan dan guard target.
 - [x] Regresi 125 native/HTTP, 63 browser, 26 cetak/PDF, serta interaksi toggle mobile lulus.
 - [x] Backup privat dan penambahan kolom hanya pada database produksi Faeyza; jumlah pesanan tetap.
-- [ ] Rilis dan verifikasi produksi tanda tangan.
+- [x] Rilis cdb42b5 dan verifikasi produksi tanda tangan: HTTP 31/31, doctor/aset/kolom OK, preview toggle default aktif dan status pesanan asli tetap Diterima.

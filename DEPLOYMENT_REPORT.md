@@ -9,11 +9,19 @@
 - Project UUID: `a0yuccdnmbmxcqiogeuoq2v7`.
 - Environment UUID: `tpelhtw4jiayh6clerrnseli`.
 - Application UUID: `usuqy7yd16bjf9olu6nn7cys`.
-- Runtime source commit: `f6d9ea1bbec02ad76e156ad594dc7538b66fca7d` (UI ringkas).
+- Runtime source commit: `cdb42b563e292e052d981564a61b95db1f5065aa` (toggle tanda tangan bengkel).
 - Build strategy: GitHub App + Docker Compose. Deployment berikutnya **manual**; push dokumentasi tidak merestart container.
 - Pengoperasian Coolify dilakukan melalui Chrome profil **Imam**, sesuai permintaan pemilik.
 
 ## Database dan isolasi
+
+Pembaruan tanda tangan: kolom v2 `show_workshop_signature` sudah ditambahkan hanya pada `faeyza_service`, default 1. Backup sebelum migrasi berada di `/var/lib/mysql/faeyza-pre-signature-v2.sql` pada volume database Faeyza, izin root-only 0600. Jumlah pesanan/user sebelum dan sesudah tetap 1/3. Tidak ada data bisnis yang diubah untuk pengujian produksi. Status pesanan yang diperiksa tetap Diterima setelah pratinjau UI tanpa submit.
+
+Toggle tersedia di Edit servis untuk Selesai/Sudah Diambil, default aktif. Preferensi tersimpan per pesanan, hanya dapat diubah admin, dan berlaku pada invoice pemilik serta cetak A4. Status lain selalu tanpa tanda tangan. PNG asli tersimpan privat dalam image web pada config/assets, lalu disisipkan ke invoice terotorisasi sebagai data URI; URL langsung diblokir.
+
+Hasil revisi: **125 native/HTTP, 63 browser, 26 PDF, 31 HTTP produksi PASS; 0 FAIL**. Runtime doctor memastikan aset terbaca, kolom tersedia, schema/DB/penyimpanan OK, dan log PHP tanpa error. Pratinjau produksi membuktikan toggle tersembunyi pada status Diterima, muncul serta checked saat pilihan UI menjadi Selesai, kemudian dikembalikan tanpa menyimpan. Gambar/toggle aktif-nonaktif dan cetak diuji penuh menggunakan DB testing. Screenshot crop produksi tidak merespons; bukti UI diambil sebagai screenshot viewport dengan data uji, dan verifikasi produksi dicatat melalui DOM serta doctor.
+
+Bukti: `signature-browser-results.json`, `signature-toggle-mobile.png`, `invoice-final-print-1.png`, `signature-production-migration.png`, `signature-production-doctor.png`, dan `production-smoke-results.json` dalam tests/artifacts. CLI migrasi memiliki guard nama DB dan dapat diulang; hak runtime tetap SELECT/INSERT/UPDATE tanpa ALTER.
 
 MariaDB **11.4.13** pada container khusus Faeyza, database `faeyza_service`, user `faeyza_runtime`. Hak runtime yang diperiksa: **SELECT, INSERT, UPDATE** hanya pada database Faeyza. Root tidak diberikan kepada container web.
 
