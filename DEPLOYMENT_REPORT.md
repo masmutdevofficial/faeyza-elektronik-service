@@ -138,3 +138,13 @@ Konsumen dari halaman detail sekarang tetap pada form pesanan, tanpa dropdown/Ta
 Runtime 65ee1c7e5a2bb754bd86ba57bf09be0c332e7191 dirilis ke resource Faeyza yang sama; deployment 1s09t6hj7bs7kd2ycyid6re0 Success dalam 27 detik. Template detail servis kini memuat baris Nama barang, Merek dan Model untuk pelanggan/admin/halaman sukses. Tidak ada perubahan skema, data servis, konfigurasi atau resource lain.
 
 Regresi 214 native/HTTP + 14 browser pelanggan PASS. Produksi 40 HTTP + 3 rincian data PASS; pesanan Speaker Aktif Bluetooth / Harman Kardon / Onyx 5 diperiksa read-only melalui admin. Pengujian browser pelanggan normal/custom 375/768/1440 dilakukan di database testing. Bukti pada TEST_REPORT.md.
+
+## Tanggal selesai dan hapus/pulihkan data
+
+Runtime **5cd0e228fbec8f6f9f67017c5dbb9d7350a10663**, deployment **8r2qroyxrpnjtpdmqvwumlp7 Success**, durasi 39 detik, healthcheck Healthy. Rilis manual pada resource Faeyza yang sama melalui Chrome profil Imam. Container baru berakhiran 20261118T024648; compose, volume, network, domain dan resource lain tidak diubah.
+
+Sebelum rilis, backup hanya database faeyza_service ke `/var/lib/mysql/faeyza-before-v3-20261118T094531.sql` pada volume database Faeyza, root-only mode 600, 16.979 byte. Migrasi v3 additive/idempotent telah diverifikasi lokal lalu diterapkan melalui terminal container database khusus Faeyza dengan guard nama database. Lima kolom baru dan tabel record_events tersedia, versi migrasi 3 tercatat. Tidak ada perubahan massal tanggal lama; template langsung membatasi penampilan sesuai status.
+
+Jumlah akun/konsumen/servis/sparepart sebelum migrasi dan sesudah rilis tetap 4/3/3/1. record_events 0 membuktikan tidak ada penghapusan/pemulihan data nyata selama QA. Runtime tetap hanya SELECT/INSERT/UPDATE pada faeyza_service; root tidak dipasang pada aplikasi web. Doctor produksi PHP 8.4.27/MariaDB 11.4.13 OK termasuk skema penghapusan, direktori privat dan aset tanda tangan. Tidak ada file error log aplikasi.
+
+Verifikasi: 264 native/HTTP + 124 browser bisnis + 33 browser fitur baru + 42 PDF lokal, lalu 45 HTTP + 14 browser produksi, seluruhnya PASS. Invoice Menunggu Sparepart tidak menampilkan tanggal selesai/garansi lama. Kolom form disabled pada status tersebut dan aktif untuk Selesai/Sudah Diambil; status preview dikembalikan tanpa save. Konfirmasi Hapus konsumen/sparepart dan filter Dihapus tersedia, Batal mempertahankan stok. Hapus/pulihkan aktual beserta pengembalian stok diuji hanya di faeyza_test. Total **522 PASS, 0 FAIL, 0 BLOCKED**. Detail bukti dan perbaikan test tersedia di TEST_REPORT.md. Server QA 8081 dihentikan; server development 8080 tetap berjalan.

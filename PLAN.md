@@ -111,5 +111,6 @@ Status deployment: COMPLETE. Kedua container healthy, admin login/logout/login u
 - [x] Migration v3 additive/idempotent di development/testing; SQL pre-deploy diverifikasi lokal.
 - [x] 264 native/HTTP PASS, termasuk concurrency hapus/stok masuk dan label konfirmasi.
 - [x] 124 browser bisnis + 33 interaksi/tata letak hapus/pulihkan + 42 cetak PDF PASS.
-- [ ] Backup privat produksi, migrasi khusus DB Faeyza, rilis, doctor, dan verifikasi non-destruktif.
-- [ ] Dokumentasi/laporan akhir.
+- [x] Backup privat produksi, migrasi khusus DB Faeyza, runtime 5cd0e22; doctor dan healthcheck OK.
+- [x] Produksi 45 HTTP + 14 browser PASS; akun/konsumen/servis/sparepart tetap 4/3/3/1 dan audit penghapusan 0.
+- [x] Dokumentasi/laporan akhir; total 522 PASS, 0 FAIL, 0 BLOCKED. Server QA 8081 dihentikan, 8080 tetap berjalan.
