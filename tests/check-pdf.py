@@ -5,7 +5,7 @@ from pathlib import Path
 from pypdf import PdfReader
 
 base = Path(__file__).parent / 'artifacts'
-browser_fixture = json.loads((base.parent / 'local-browser-fixtures.json').read_text(encoding='utf-8'))
+browser_fixture = json.loads((base / 'print-fixtures.json').read_text(encoding='utf-8'))
 expected_warranty = '/'.join(reversed(browser_fixture.get('warrantyDate', '2026-12-17').split('-')))
 results = []
 for name in ('invoice-initial', 'invoice-final', 'invoice-long', 'invoice-pending'):
@@ -13,7 +13,7 @@ for name in ('invoice-initial', 'invoice-final', 'invoice-long', 'invoice-pendin
     text = '\n'.join(p.extract_text() or '' for p in doc.pages)
     checks = {
         f'10 {name} ukuran A4': all(abs(float(p.mediabox.width) - 595.28) < 2 and abs(float(p.mediabox.height) - 841.89) < 2 for p in doc.pages),
-        f'10 {name} navigasi dan tombol disembunyikan': 'Cetak invoice' not in text and 'Detail servis' not in text and 'Workspace' not in text,
+        f'10 {name} navigasi dan tombol disembunyikan': all(label not in text for label in ('Cetak invoice', 'Detail servis', 'Workspace', 'Cetak lewat menu browser')),
         f'10 {name} konten identitas dan footer utuh': 'Faeyza Elektronik Service' in text and 'Dokumen ini diterbitkan' in text,
         f'15 {name} website bengkel tercetak': 'www.faeyzateknik.com' in text,
         f'10 {name} logo asli tertanam': any(len(page.images) > 0 for page in doc.pages),

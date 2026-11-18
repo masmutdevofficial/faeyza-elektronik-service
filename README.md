@@ -167,6 +167,14 @@ Tanpa dukungan dialog/JavaScript, tautan membuka halaman status ringkas dengan v
 
 Pengujian browser tambahan: `runQuickStatus` pada tests/quick-status.mjs memakai fixture hasil tests/run.php dan runBrowserE2E. Di antara suite browser yang diulang, `php tests/reset-login-limits.php` dapat membersihkan bucket login **hanya database _test melalui CLI**, tanpa menghapus akun, pesanan, atau stok. Ini mengisolasi kuota percobaan antarsuite; pembatas login aplikasi tetap aktif.
 
+## Filter status dan cetak invoice
+
+Pilihan status pada daftar Servis/Invoice langsung menyaring hasil tanpa menekan Cari. Kolom pencarian tetap dapat dikirim dengan Cari atau Enter. Mengganti filter memulai dari halaman pertama; perubahan status cepat mempertahankan pencarian, filter, dan halaman asal. Pesanan yang tidak lagi cocok keluar dari hasil filter tersebut.
+
+Invoice memakai `public/assets/invoice-print.js` tersendiri, dengan URL aset berversi. Tombol Cetak invoice memanggil dialog browser secara langsung. Jika browser menolak/tidak menjalankan perintah, petunjuk alternatif terbuka: di HP gunakan menu browser → Bagikan → Cetak; di desktop Ctrl+P/⌘+P. Petunjuk juga dapat dibuka manual dan tidak ikut tercetak. Template A4, hak akses pemilik, biaya nullable, logo dan tanda tangan tetap sama.
+
+Uji tambahan: `node tests/invoice-filter-js.mjs`, `runInvoiceFilter` dari tests/invoice-filter.mjs, serta tests/print.ps1. Renderer PDF QA memakai fixture database testing dan mencatat metadata cetak sendiri, sehingga tidak bergantung pada hasil browser lama. Pengujian PDF tidak membuktikan akses ke printer fisik atau perilaku semua versi browser HP.
+
 ## Hapus dan pulihkan data
 
 Admin membuka **Konsumen/Sparepart → detail → Hapus**, mencentang konfirmasi, lalu menekan tombol Hapus. Data hilang dari daftar aktif dan muncul pada filter **Dihapus**. Buka detail data tersebut lalu **Pulihkan** untuk mengaktifkannya kembali. Penghapusan/pemulihan dicatat di record_events beserta operator dan waktu.

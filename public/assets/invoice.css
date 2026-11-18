@@ -66,3 +66,4 @@ body.invoice-body{margin:0;background:#edf0f3;color:var(--nota-ink);font:12px Ar
  .nota-contact-phone{margin-top:10px!important}.nota-fields>div,.nota-work .nota-fields>div{grid-template-columns:100px minmax(0,1fr)}
  .nota-bottom{grid-template-columns:1fr;gap:16px}.nota-signatures td{height:110px}.nota-footer{line-height:1.5}
 }
+.print-toolbar{flex-wrap:wrap}.print-help{flex-basis:100%;min-width:0;font-size:12px;color:#5b6470}.print-help summary{cursor:pointer;display:list-item}.print-help p{margin:8px 0 0;line-height:1.6;overflow-wrap:anywhere}

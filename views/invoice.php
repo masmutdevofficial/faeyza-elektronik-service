@@ -9,15 +9,16 @@ $accessories=json_decode($order['accessories'],true);
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?=e($title)?> · <?=e($b['name'])?></title>
-    <link rel="stylesheet" href="assets/invoice.css?v=3">
+    <link rel="stylesheet" href="assets/invoice.css?v=4">
     <link rel="stylesheet" href="assets/print.css">
-    <script src="assets/app.js" defer></script>
+    <script src="assets/invoice-print.js?v=1" defer></script>
 </head>
 <body class="invoice-body">
 <div class="print-toolbar">
     <a class="button secondary" href="<?=e(url('order',['id'=>$order['id']]))?>"><?=mdi('arrow-left')?> Detail servis</a>
     <span>Nota service / Invoice · A4</span>
     <button type="button" class="button" data-print><?=mdi('printer-outline')?> Cetak invoice</button>
+    <details class="print-help" data-print-help><summary>Cetak lewat menu browser</summary><p>Di HP: menu ⋮ → Bagikan → Cetak. Di komputer: Ctrl+P atau ⌘+P.</p></details>
 </div>
 <main class="invoice-paper">
     <header class="nota-header">

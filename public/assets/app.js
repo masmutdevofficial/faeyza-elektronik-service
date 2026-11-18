@@ -56,7 +56,13 @@ document.querySelectorAll('[data-custom-select]').forEach(select => {
   const update = () => { const show = select.value === 'Lainnya'; field.hidden = !show; field.querySelector('input').required = show; };
   select.addEventListener('change', update); update();
 });
-document.querySelectorAll('[data-print]').forEach(button => button.addEventListener('click', () => window.print()));
+document.querySelectorAll('[data-status-filter]').forEach(select => {
+  select.addEventListener('change', () => {
+    const form = select.form;
+    if (typeof form.requestSubmit === 'function') form.requestSubmit();
+    else form.submit();
+  });
+});
 const customerPicker = document.querySelector('[data-customer-picker]');
 const customerPreview = document.querySelector('[data-customer-preview]');
 if (customerPreview) {

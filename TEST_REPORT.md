@@ -274,3 +274,26 @@ Permintaan redeploy berikutnya telah dijalankan. Runtime 62cc1d2e1a038f1884e335b
 Doctor produksi OK: PHP 8.4.27, MariaDB 11.4.13/faeyza_service, skema v3 tersedia, method changeStatus tersedia, storage writable dan aset privat terbaca. Izin runtime SELECT/INSERT/UPDATE hanya pada DB Faeyza. Data terbaca 4 akun/3 konsumen/3 servis/1 sparepart; tidak ada file error log aplikasi. Tidak membuat data uji atau menekan Simpan status di produksi. Transaksi penyimpanan/pengembalian stok telah diuji pada faeyza_test dalam fase sebelumnya. Bukti doctor/health/deployment tersimpan sebagai quick-status-production-doctor.txt, quick-status-production-health.txt dan quick-status-deployment-state.txt.
 
 Hasil fase redeploy: **72 PASS, 0 FAIL, 0 BLOCKED**. Total fase implementasi dan rilis fitur: **522 PASS**. Lint PHP tests/production-smoke.php, node --check tests/quick-status-production.mjs dan git diff --check juga lulus. Tambahan commit sesudah rilis hanya dokumentasi/script QA; kode runtime tidak berubah. Status redeploy COMPLETE.
+
+## Keluhan filter status dan cetak invoice
+
+Reproduksi produksi melalui profil Imam sebelum perubahan: memilih Selesai tanpa Cari tidak mengubah URL dan masih menampilkan Menunggu Sparepart, Diterima, Selesai, Sudah Diambil. Setelah Cari, daftar hanya memuat Selesai. Bukti: invoice-filter-production-before.json. Penyebab filter adalah pilihan belum dikirim, bukan query SQL mengabaikan status.
+
+Perbaikan: select filter memakai requestSubmit pada change (fallback submit); server memvalidasi enum dan kepemilikan. Pencarian/filter/halaman disimpan pada tautan dialog status dan dipulihkan pada Batal, validasi gagal, dan redirect sukses. Invoice memuat invoice-print.js?v=1 secara mandiri, invoice.css?v=4, halaman aplikasi memakai app.js?v=9. Modul cetak memanggil window.print secara sinkron dari klik, mengenali event cetak, dan membuka bantuan jika tidak tersedia/ditolak/diabaikan. Petunjuk HTML tetap dapat dibuka tanpa skrip cetak dan disembunyikan ketika print.
+
+Hasil lokal aktual:
+
+| Suite | Tujuan | Hasil | Bukti/perintah |
+| --- | --- | --- | --- |
+| Native/domain/HTTP | Regresi sebelumnya; tujuh filter untuk admin/pelanggan, ownership, input invalid, konteks redirect, invoice memakai modul terpisah | 322 PASS, 0 FAIL | tests/test.ps1; invoice-filter-integration-output.txt |
+| Unit JavaScript | Klik benar-benar memanggil window.print, before/afterprint, media print, API hilang/throw/silent, klik ulang; filter otomatis pada form yang tepat | 12 PASS, 0 FAIL | node tests/invoice-filter-js.mjs; invoice-filter-js-results.json |
+| Browser filter/cetak | Pilih status tanpa Cari, Semua status, empty state, filter tetap setelah update, filter Invoice/pelanggan, bantuan cetak dan viewport | 20 PASS, 0 FAIL | runInvoiceFilter; invoice-filter-browser-results.json |
+| Browser bisnis | Registrasi/login, servis, stok 10→8, Rp150.000, selesai/garansi, tanda tangan, IDOR dan formulir | 124 PASS, 0 FAIL | runBrowserE2E; invoice-filter-business-results.json |
+| Browser dialog | Status/tanggal, konfirmasi pembatalan, stok 8→10, konteks URL baru, pelanggan, responsive | 29 PASS, 0 FAIL | runQuickStatus; invoice-filter-status-results.json |
+| PDF aktual | Empat dokumen A4: awal, final, teks panjang, legacy nonfinal; navigasi dan bantuan tidak tercetak | 42 PASS, 0 FAIL | tests/print.ps1; invoice-filter-print-output.txt, print-results.json |
+
+Total assertion lokal **549 PASS, 0 FAIL**. Pengujian UI lokal awal memakai in-app browser, sedangkan regresi bisnis/dialog memakai Chrome profil Imam setelah tersambung. PDF terbaru diperiksa visual sebagai PNG. Metadata PDF diambil dari pesanan yang benar-benar dirender, sehingga fixture browser lama tidak membuat pemeriksaan garansi keliru.
+
+Batas verifikasi cetak: invoice produksi benar-benar terbuka tanpa error JavaScript sebelum perbaikan. Klik Cetak aktual di in-app browser/Chrome membuat perintah Input/Runtime menunggu saat native print berjalan; dialog native tidak dapat diinspeksi tuntas melalui target halaman. Tab uji milik agen ditutup untuk pulih. Ini **bukan** bukti PASS printer fisik atau reproduksi HP Android klien. Unit membuktikan pemanggilan handler; PDF membuktikan keluaran engine cetak. Perangkat/browser HP klien belum diuji langsung, sehingga penyebab spesifik keluhan cetak HP belum dapat dipastikan.
+
+Masalah lingkungan yang diatasi: MariaDB portable lokal belum berjalan setelah pergantian sesi; runtime proyek pada loopback 3307 dinyalakan tanpa menyentuh produksi, lalu suite 322 PASS. Chrome profil Imam awalnya terputus; pemilik menyambungkannya kembali. Semua perubahan transaksi dilakukan hanya pada faeyza_test. Tidak ada migrasi database baru atau dependensi PDF produksi baru.

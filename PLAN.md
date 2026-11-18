@@ -122,3 +122,10 @@ Status deployment: COMPLETE. Kedua container healthy, admin login/logout/login u
 - [x] 297 backend/native/HTTP + 124 browser bisnis + 29 browser dialog PASS; 375/768/1440px, validasi, race, stok dan role.
 - [x] Dokumentasi dan source 4238066 dipush ke main; tidak menjalankan deployment manual Coolify. QA 8081 dihentikan, development 8080 tetap berjalan.
 - [x] Sesuai permintaan berikutnya, redeploy runtime 62cc1d2 ke Coolify; deployment ugya9ldmwfbpta4nmp0blrp4 Success, healthcheck Healthy, doctor OK, 47 HTTP + 25 browser produksi PASS.
+
+## Keluhan filter status dan cetak invoice
+
+- [x] Reproduksi produksi: tanpa Cari status campuran, setelah Cari hanya Selesai; terapkan auto-submit dan pertahankan konteks.
+- [x] Invoice produksi terbuka tanpa error JS; modul cetak terpisah/berversi, bantuan menu browser, tanpa mengklaim printer/HP fisik telah diuji.
+- [x] Lokal 322 native/HTTP + 12 unit JavaScript + 20 browser filter/cetak + 124 bisnis + 29 dialog + 42 PDF PASS (549). Tidak mengubah pesanan produksi.
+- [ ] Push main, redeploy resource Faeyza melalui Chrome profil Imam, dan verifikasi hasil produksi.

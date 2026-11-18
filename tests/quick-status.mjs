@@ -7,8 +7,10 @@ export async function runQuickStatus({tab,viewport,fixture,business,save,base='h
   const open=async ()=>{await tab.playwright.locator('[data-status-open]').click();await tab.ax.get();};
   const select=status=>dialog.locator('[name="new_status"]').selectOption(status);
   const submit=async route=>{
+    const action=new URL(await dialog.locator('form').getAttribute('action'),base);
+    const expected=route==='orders'?'index.php?'+new URLSearchParams({page:'orders',q:action.searchParams.get('q')??'',status:action.searchParams.get('filter_status')??'',p:action.searchParams.get('p')??'1'}):'index.php?page='+route;
     await tab.playwright.expectNavigation(()=>dialog.getByRole('button',{name:'Simpan status',exact:true}).click(),{waitUntil:'domcontentloaded'});
-    await tab.playwright.waitForURL(base+'index.php?page='+route,{waitUntil:'domcontentloaded'});await tab.ax.get();
+    await tab.playwright.waitForURL(base+expected,{waitUntil:'domcontentloaded'});await tab.ax.get();
   };
   const size=async width=>{await viewport.set({width,height:900});const current=await tab.playwright.evaluate(()=>({w:innerWidth,h:innerHeight}));if(current.w!==width)await viewport.set({width:Math.round(width*width/current.w),height:Math.round(900*900/current.h)});};
   try {

@@ -92,6 +92,7 @@ if ($page==='dashboard') {
 if (in_array($page,['orders','invoices'],true)) {
     if ($method!=='GET') abort_page(405);
     try { $q=Validate::text($_GET,'q',150,false); $status=Validate::text($_GET,'status',40,false); } catch(ValidationException) { abort_page(400); }
+    if ($status!=='' && !in_array($status,Orders::STATUSES,true)) abort_page(400);
     $p=max(1,min(100000,(int)(is_scalar($_GET['p']??1)?($_GET['p']??1):1)));
     $orders=Orders::listing($user,$q,$status?:null,$p);
     render('orders',compact('orders','page','q','status','p')); return;
@@ -111,16 +112,26 @@ if ($page==='service-status') {
     $statusOrder=Orders::get($id,$user); if (!$statusOrder) abort_page(404);
     $returnTo=($method==='POST'?($_POST['return_to']??'order'):($_GET['return_to']??'order'));
     if (!is_string($returnTo) || !in_array($returnTo,['order','orders'],true)) abort_page(400);
+    $statusBackParams=['id'=>$id]; $statusRouteParams=['id'=>$id,'return_to'=>$returnTo];
+    if ($returnTo==='orders') {
+        try {
+            $returnQuery=Validate::text($_GET,'q',150,false); $returnStatus=Validate::text($_GET,'filter_status',40,false);
+            $returnPage=Validate::integer($_GET['p']??1,1,100000);
+            if ($returnStatus!=='' && !in_array($returnStatus,Orders::STATUSES,true)) throw new ValidationException('Filter tidak valid.');
+        } catch(ValidationException) { abort_page(400); }
+        $statusBackParams=['q'=>$returnQuery,'status'=>$returnStatus,'p'=>$returnPage];
+        $statusRouteParams+=['q'=>$returnQuery,'filter_status'=>$returnStatus,'p'=>$returnPage];
+    }
     if ($method==='POST') {
         try {
             Orders::changeStatus($id,$_POST,$user);
             flash('Status servis berhasil diperbarui.');
-            redirect($returnTo,$returnTo==='order'?['id'=>$id]:[]);
+            redirect($returnTo,$statusBackParams);
         } catch(ValidationException $e) { $error=$e->getMessage(); http_response_code(422); }
     } else {
         $data=['new_status'=>$statusOrder['status'],'revision'=>$statusOrder['revision'],'completed_date'=>Orders::isComplete($statusOrder)?$statusOrder['completed_date']:null,'warranty_date'=>Orders::isComplete($statusOrder)?$statusOrder['warranty_date']:null];
     }
-    render('service-status',compact('statusOrder','data','returnTo','error')); return;
+    render('service-status',compact('statusOrder','data','returnTo','error','statusBackParams','statusRouteParams')); return;
 }
 // Penggunaan sparepart dikirim ke service-edit, selalu berotorisasi admin.
 if ($page==='service-new' || $page==='service-edit') {

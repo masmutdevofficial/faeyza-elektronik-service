@@ -50,6 +50,8 @@ try {
     verify(http('/assets/app.js')['status']===200,'Application JavaScript available');
     verify(http('/assets/faeyza-logo.jpg')['status']===200,'Logo asset available');
     verify(http('/assets/print.css')['status']===200,'Print stylesheet available');
+    $printModule=http('/assets/invoice-print.js?v=1');
+    verify($printModule['status']===200&&str_contains($printModule['body'],'window.print')&&str_contains($printModule['body'],'beforeprint'),'Independent invoice print module available');
     verify(http('/assets/invoice.css')['status']===200,'Invoice stylesheet available');
     verify(http('/index.php?page=account')['status']===303,'Account settings require login');
     verify(http('/index.php?page=customer-password&id=1')['status']===303,'Customer password reset requires login');
