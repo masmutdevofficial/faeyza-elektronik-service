@@ -135,12 +135,14 @@ final class Accounts {
 }
 final class Orders {
     public const COMPLETED_STATUSES=['Selesai','Sudah Diambil'];
+    public const STATUS_GROUPS=['working'=>['Menunggu Konfirmasi','Diterima','Dalam Pengerjaan','Menunggu Sparepart'],'done'=>self::COMPLETED_STATUSES];
     public const STATUSES=['Menunggu Konfirmasi','Diterima','Dalam Pengerjaan','Menunggu Sparepart','Selesai','Sudah Diambil','Dibatalkan'];
     public const ITEMS=['TV','Speaker Aktif Bluetooth','Amplifier','Mixer Audio','Kipas Angin','Laptop','STB','Home Theatre'];
     public const BRANDS=['SONY','LG','Samsung','Sharp','Polytron','Coocaa','Aqua','Toshiba','Panasonic','Philips'];
     public const ACCESSORIES=['Kabel Power','Remote','Adaptor / Charger','Battery','Bracket'];
     public static function customer(array $actor): ?array { return Database::one('SELECT c.*,u.phone FROM customers c JOIN users u ON u.id=c.user_id WHERE c.user_id=? AND c.deleted_at IS NULL',[$actor['id']]); }
     public static function isComplete(array $order): bool { return in_array($order['status']??'',self::COMPLETED_STATUSES,true); }
+    public static function validStatusFilter(string $status): bool { return $status==='' || isset(self::STATUS_GROUPS[$status]) || in_array($status,self::STATUSES,true); }
     public static function get(int $id,array $actor): ?array {
         $sql='SELECT s.*,c.user_id FROM service_orders s JOIN customers c ON c.id=s.customer_id WHERE s.id=?'; $p=[$id];
         if ($actor['role']!=='admin') { $sql.=' AND c.user_id=? AND c.deleted_at IS NULL'; $p[]=$actor['id']; }
@@ -261,7 +263,12 @@ final class Orders {
             $where[]='(s.invoice_number LIKE ? OR s.customer_name LIKE ? OR s.contact_phone LIKE ? OR u.phone LIKE ?)';
             array_push($params,$search,$search,'%'.$phone.'%','%'.$phone.'%');
         }
-        if ($status) { $where[]='s.status=?'; $params[]=$status; }
+        if ($status) {
+            if (!self::validStatusFilter($status)) throw new ValidationException('Filter status tidak valid.');
+            $statuses=self::STATUS_GROUPS[$status]??[$status];
+            $where[]='s.status IN ('.implode(',',array_fill(0,count($statuses),'?')).')';
+            array_push($params,...$statuses);
+        }
         return Database::all('SELECT s.* FROM service_orders s JOIN customers c ON c.id=s.customer_id JOIN users u ON u.id=c.user_id'.($where?' WHERE '.implode(' AND ',$where):'').' ORDER BY s.id DESC LIMIT 20 OFFSET '.(($page-1)*20),$params);
     }
 }

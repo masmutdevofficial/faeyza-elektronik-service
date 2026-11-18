@@ -128,4 +128,11 @@ Status deployment: COMPLETE. Kedua container healthy, admin login/logout/login u
 - [x] Reproduksi produksi: tanpa Cari status campuran, setelah Cari hanya Selesai; terapkan auto-submit dan pertahankan konteks.
 - [x] Invoice produksi terbuka tanpa error JS; modul cetak terpisah/berversi, bantuan menu browser, tanpa mengklaim printer/HP fisik telah diuji.
 - [x] Lokal 322 native/HTTP + 14 unit JavaScript + 21 browser filter/cetak + 124 bisnis + 29 dialog + 42 PDF PASS (552). Tidak mengubah pesanan produksi.
-- [ ] Push main, redeploy resource Faeyza melalui Chrome profil Imam, dan verifikasi hasil produksi.
+- [x] Push runtime 63c99fb, deployment yedzbqd9xh6sphhl5shtwqnc Success, 65 pemeriksaan produksi PASS; health dan doctor OK.
+- [ ] Verifikasi manual dialog cetak pada perangkat Android klien (BLOCKED: belum tersedia).
+
+## Kelompok status ringkasan
+
+- [x] Dalam proses mencakup Menunggu Konfirmasi/Diterima/Dalam Pengerjaan/Menunggu Sparepart; Selesai mencakup Selesai/Sudah Diambil. Dibatalkan di luar keduanya.
+- [x] 349 native + 17 browser kelompok + 124 bisnis + 29 dialog + 21 filter/cetak + 14 unit JS PASS (554).
+- [ ] Push/redeploy pengelompokan dan verifikasi produksi.

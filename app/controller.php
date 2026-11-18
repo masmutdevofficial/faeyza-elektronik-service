@@ -83,7 +83,7 @@ if ($page==='dashboard') {
     if ($method!=='GET') abort_page(405);
     $filter=$user['role']==='admin'?'':' JOIN customers c ON c.id=s.customer_id WHERE c.user_id=?';
     $params=$user['role']==='admin'?[]:[$user['id']];
-    $stats=Database::one("SELECT COUNT(*) total,COALESCE(SUM(status='Menunggu Konfirmasi'),0) waiting,COALESCE(SUM(status IN ('Diterima','Dalam Pengerjaan','Menunggu Sparepart')),0) working,COALESCE(SUM(status IN ('Selesai','Sudah Diambil')),0) done FROM service_orders s".$filter,$params);
+    $stats=Database::one("SELECT COUNT(*) total,COALESCE(SUM(status='Menunggu Konfirmasi'),0) waiting,COALESCE(SUM(status IN ('Menunggu Konfirmasi','Diterima','Dalam Pengerjaan','Menunggu Sparepart')),0) working,COALESCE(SUM(status IN ('Selesai','Sudah Diambil')),0) done FROM service_orders s".$filter,$params);
     $customers= $user['role']==='admin' ? Database::one('SELECT COUNT(*) n FROM customers WHERE deleted_at IS NULL')['n'] : null;
     $low= $user['role']==='admin' ? Database::one('SELECT COUNT(*) n FROM spare_parts WHERE stock<=minimum_stock AND deleted_at IS NULL')['n'] : null;
     $recent=array_slice(Orders::listing($user),0,6);
@@ -92,7 +92,7 @@ if ($page==='dashboard') {
 if (in_array($page,['orders','invoices'],true)) {
     if ($method!=='GET') abort_page(405);
     try { $q=Validate::text($_GET,'q',150,false); $status=Validate::text($_GET,'status',40,false); } catch(ValidationException) { abort_page(400); }
-    if ($status!=='' && !in_array($status,Orders::STATUSES,true)) abort_page(400);
+    if (!Orders::validStatusFilter($status)) abort_page(400);
     $p=max(1,min(100000,(int)(is_scalar($_GET['p']??1)?($_GET['p']??1):1)));
     $orders=Orders::listing($user,$q,$status?:null,$p);
     render('orders',compact('orders','page','q','status','p')); return;
@@ -117,7 +117,7 @@ if ($page==='service-status') {
         try {
             $returnQuery=Validate::text($_GET,'q',150,false); $returnStatus=Validate::text($_GET,'filter_status',40,false);
             $returnPage=Validate::integer($_GET['p']??1,1,100000);
-            if ($returnStatus!=='' && !in_array($returnStatus,Orders::STATUSES,true)) throw new ValidationException('Filter tidak valid.');
+            if (!Orders::validStatusFilter($returnStatus)) throw new ValidationException('Filter tidak valid.');
         } catch(ValidationException) { abort_page(400); }
         $statusBackParams=['q'=>$returnQuery,'status'=>$returnStatus,'p'=>$returnPage];
         $statusRouteParams+=['q'=>$returnQuery,'filter_status'=>$returnStatus,'p'=>$returnPage];

@@ -169,6 +169,8 @@ Pengujian browser tambahan: `runQuickStatus` pada tests/quick-status.mjs memakai
 
 ## Filter status dan cetak invoice
 
+Kartu ringkasan **Dalam proses** menghitung Menunggu Konfirmasi, Diterima, Dalam Pengerjaan, dan Menunggu Sparepart. Kartu **Selesai** menghitung Selesai dan Sudah Diambil. Dibatalkan tidak masuk kedua kelompok; tetap termasuk Total servis. Klik kartu membuka daftar kelompok yang sama. Dropdown menyediakan kelompok ringkasan serta masing-masing status servis. Kelompok hanya dipakai untuk pencarian, bukan status baru pada pesanan.
+
 Pilihan status pada daftar Servis/Invoice langsung menyaring hasil tanpa menekan Cari. Kolom pencarian tetap dapat dikirim dengan Cari atau Enter. Tombol Kembali menyelaraskan pilihan dengan hasil yang dipulihkan browser. Mengganti filter memulai dari halaman pertama; perubahan status cepat mempertahankan pencarian, filter, dan halaman asal. Pesanan yang tidak lagi cocok keluar dari hasil filter tersebut.
 
 Invoice memakai `public/assets/invoice-print.js` tersendiri, dengan URL aset berversi. Tombol Cetak invoice memanggil dialog browser secara langsung. Jika browser menolak/tidak menjalankan perintah, petunjuk alternatif terbuka: di HP gunakan menu browser → Bagikan → Cetak; di desktop Ctrl+P/⌘+P. Petunjuk juga dapat dibuka manual dan tidak ikut tercetak. Template A4, hak akses pemilik, biaya nullable, logo dan tanda tangan tetap sama.
