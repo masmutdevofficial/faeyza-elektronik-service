@@ -157,6 +157,16 @@ Riwayat hasil aktual dan batas verifikasi tersedia di TEST_REPORT.md. Pengujian 
 
 Tanggal selesai dan garansi hanya aktif pada status **Selesai** atau **Sudah Diambil**. Tanggal selesai wajib untuk kedua status itu. Mengubah status ke status lain mengosongkan kedua tanggal ketika disimpan. Invoice/detail tidak menampilkan tanggal penyelesaian lama yang tidak sesuai status.
 
+## Ubah status cepat
+
+Admin dapat menekan **Ubah status** di kolom status daftar servis atau pada detail servis. Pilih status lalu **Simpan status**, tanpa membuka Edit servis. Dialog hanya mengubah status dan tanggal penyelesaian/garansi; perangkat, konsumen, biaya, nomor invoice, catatan, dan pilihan tanda tangan tetap tersimpan.
+
+Status Selesai/Sudah Diambil meminta tanggal selesai dan menyediakan tanggal garansi opsional. Status lain mengosongkan keduanya. Dibatalkan meminta konfirmasi pengembalian sparepart; stok dikembalikan secara atomik dan tidak berganda saat kirim ulang. Membuka kembali servis tidak otomatis memakai sparepart lagi. Jika data berubah dari tab lain, muat ulang sebelum menyimpan. Batal/Tutup/Escape menutup dialog tanpa perubahan.
+
+Tanpa dukungan dialog/JavaScript, tautan membuka halaman status ringkas dengan validasi server yang sama. Pelanggan hanya dapat melihat status. Tidak ada migrasi database baru untuk fitur ini; pembaruan tetap memerlukan skema v3 dari rilis sebelumnya.
+
+Pengujian browser tambahan: `runQuickStatus` pada tests/quick-status.mjs memakai fixture hasil tests/run.php dan runBrowserE2E. Di antara suite browser yang diulang, `php tests/reset-login-limits.php` dapat membersihkan bucket login **hanya database _test melalui CLI**, tanpa menghapus akun, pesanan, atau stok. Ini mengisolasi kuota percobaan antarsuite; pembatas login aplikasi tetap aktif.
+
 ## Hapus dan pulihkan data
 
 Admin membuka **Konsumen/Sparepart → detail → Hapus**, mencentang konfirmasi, lalu menekan tombol Hapus. Data hilang dari daftar aktif dan muncul pada filter **Dihapus**. Buka detail data tersebut lalu **Pulihkan** untuk mengaktifkannya kembali. Penghapusan/pemulihan dicatat di record_events beserta operator dan waktu.

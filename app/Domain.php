@@ -167,18 +167,22 @@ final class Orders {
         $fields['accessories']=json_encode(array_values(array_unique($access)),JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR);
         return $fields;
     }
-    private static function adminFields(array $d,array $fields): array {
+    private static function completionFields(array $d,string $receivedDate): array {
         $status=Validate::text($d,'status',40);
         if (!in_array($status,self::STATUSES,true)) throw new ValidationException('Status tidak valid.');
         $complete=self::isComplete(['status'=>$status]);
         $done=$complete?Validate::date($d['completed_date']??null):null; $warranty=$complete?Validate::date($d['warranty_date']??null):null;
         if ($complete && !$done) throw new ValidationException('Tanggal selesai wajib untuk servis selesai/diambil.');
-        if ($done && $done<$fields['received_date']) throw new ValidationException('Tanggal selesai tidak boleh sebelum tanggal masuk.');
+        if ($done && $done<$receivedDate) throw new ValidationException('Tanggal selesai tidak boleh sebelum tanggal masuk.');
         if ($warranty && (!$done || $warranty<$done)) throw new ValidationException('Garansi harus setelah atau sama dengan tanggal selesai.');
-        $values=['status'=>$status,'completed_date'=>$done,'warranty_date'=>$warranty,'total_cost'=>Validate::decimal($d['total_cost']??null),'technician_notes'=>Validate::text($d,'technician_notes',4000,false)];
+        return ['status'=>$status,'completed_date'=>$done,'warranty_date'=>$warranty];
+    }
+    private static function adminFields(array $d,array $fields): array {
+        $values=self::completionFields($d,$fields['received_date']);
+        $values+=['total_cost'=>Validate::decimal($d['total_cost']??null),'technician_notes'=>Validate::text($d,'technician_notes',4000,false)];
         if (array_key_exists('show_workshop_signature',$d)) {
             $visible=Validate::integer($d['show_workshop_signature'],0,1);
-            if (in_array($status,['Selesai','Sudah Diambil'],true)) $values['show_workshop_signature']=$visible;
+            if (self::isComplete($values)) $values['show_workshop_signature']=$visible;
         }
         return $values;
     }
@@ -224,12 +228,28 @@ final class Orders {
             $order=Database::one('SELECT * FROM service_orders WHERE id=? FOR UPDATE',[$id]);
             if (!$order) throw new ValidationException('Servis tidak ditemukan.');
             if ((int)$order['revision']!==$revision) throw new ValidationException('Data servis telah berubah. Muat ulang halaman sebelum menyimpan.');
-            if ($fields['status']==='Dibatalkan' && $order['status']!=='Dibatalkan') {
-                $parts=Database::all('SELECT * FROM service_order_parts WHERE service_order_id=? AND quantity>0 ORDER BY spare_part_id',[$id]);
-                foreach ($parts as $part) Inventory::allocateLocked($id,(int)$part['spare_part_id'],0,$actor,'Pengembalian: servis dibatalkan');
-            }
+            self::returnCancelledParts($order,$fields['status'],$actor);
             $sets=implode(',',array_map(fn($k)=>$k.'=?',array_keys($fields)));
             Database::query('UPDATE service_orders SET '.$sets.',revision=revision+1 WHERE id=?',[...array_values($fields),$id]);
+        });
+    }
+    private static function returnCancelledParts(array $order,string $status,array $actor): void {
+        if ($status!=='Dibatalkan' || $order['status']==='Dibatalkan') return;
+        $parts=Database::all('SELECT * FROM service_order_parts WHERE service_order_id=? AND quantity>0 ORDER BY spare_part_id',[$order['id']]);
+        foreach ($parts as $part) Inventory::allocateLocked((int)$order['id'],(int)$part['spare_part_id'],0,$actor,'Pengembalian: servis dibatalkan');
+    }
+    public static function changeStatus(int $id,array $d,array $actor): void {
+        Auth::admin($actor);
+        if (array_diff(array_keys($d),['csrf','revision','new_status','completed_date','warranty_date','confirm_cancel','return_to'])) throw new ValidationException('Permintaan ubah status memuat kolom yang tidak diizinkan.');
+        $revision=Validate::integer($d['revision']??'',1);
+        Database::tx(function() use($id,$d,$actor,$revision) {
+            $order=Database::one('SELECT * FROM service_orders WHERE id=? FOR UPDATE',[$id]);
+            if (!$order) throw new ValidationException('Servis tidak ditemukan.');
+            if ((int)$order['revision']!==$revision) throw new ValidationException('Data servis telah berubah. Muat ulang sebelum mengubah status.');
+            $fields=self::completionFields(['status'=>$d['new_status']??'','completed_date'=>$d['completed_date']??null,'warranty_date'=>$d['warranty_date']??null],$order['received_date']);
+            if ($fields['status']==='Dibatalkan' && $order['status']!=='Dibatalkan' && ($d['confirm_cancel']??'')!=='1') throw new ValidationException('Konfirmasi pembatalan servis dan pengembalian stok diperlukan.');
+            self::returnCancelledParts($order,$fields['status'],$actor);
+            Database::query('UPDATE service_orders SET status=?,completed_date=?,warranty_date=?,revision=revision+1 WHERE id=?',[...array_values($fields),$id]);
         });
     }
     public static function listing(array $actor,string $query='',?string $status=null,int $page=1): array {

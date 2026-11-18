@@ -114,3 +114,10 @@ Status deployment: COMPLETE. Kedua container healthy, admin login/logout/login u
 - [x] Backup privat produksi, migrasi khusus DB Faeyza, runtime 5cd0e22; doctor dan healthcheck OK.
 - [x] Produksi 45 HTTP + 14 browser PASS; akun/konsumen/servis/sparepart tetap 4/3/3/1 dan audit penghapusan 0.
 - [x] Dokumentasi/laporan akhir; total 522 PASS, 0 FAIL, 0 BLOCKED. Server QA 8081 dihentikan, 8080 tetap berjalan.
+
+## Ubah status cepat
+
+- [x] Dialog Ubah status pada daftar/detail servis dan halaman ringkas cadangan tanpa JavaScript.
+- [x] Endpoint khusus admin, CSRF, validasi tanggal, revision locking, pembatalan/pengembalian stok atomik.
+- [x] 297 backend/native/HTTP + 124 browser bisnis + 29 browser dialog PASS; 375/768/1440px, validasi, race, stok dan role.
+- [ ] Dokumentasi dan push ke main sesuai permintaan; tidak menjalankan deployment manual Coolify.

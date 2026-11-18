@@ -50,6 +50,12 @@ function abort_page(int $status): never {
     require ROOT.'/views/error.php'; exit;
 }
 function flash(string $message): void { $_SESSION['flash']=$message; }
+function status_action(array $order,bool $compact=false): string {
+    $GLOBALS['quick_status_dialog']=true;
+    $returnTo=($_GET['page']??'')==='orders'?'orders':'order';
+    $payload=['invoice'=>$order['invoice_number'],'status'=>$order['status'],'revision'=>$order['revision'],'completed_date'=>Orders::isComplete($order)?$order['completed_date']:'','warranty_date'=>Orders::isComplete($order)?$order['warranty_date']:'','received_date'=>$order['received_date'],'return_to'=>$returnTo];
+    return '<a class="'.($compact?'status-action':'button secondary').'" href="'.e(url('service-status',['id'=>$order['id'],'return_to'=>$returnTo])).'" data-status-open data-status-order="'.e(json_encode($payload,JSON_THROW_ON_ERROR)).'"'.($compact?' aria-label="Ubah status '.e($order['invoice_number']).'"':'').'>'.($compact?'':mdi('progress-wrench')).'Ubah status</a>';
+}
 function render(string $view, array $data=[]): void { extract($data); $user=current_user(); require ROOT.'/views/'.$view.'.php'; }
 function request_value(array $data, string $name, mixed $default=''): mixed { return $data[$name]??$default; }
 function input_field(string $name,string $label,array $data=[],string $type='text',bool $required=false,string $extra=''): void {

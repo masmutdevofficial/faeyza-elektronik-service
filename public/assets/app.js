@@ -80,7 +80,7 @@ if (customerPreview) {
   updateCustomer(false);
 }
 const signatureSetting = document.querySelector('[data-signature-setting]');
-const serviceStatus = document.querySelector('select[name="status"]');
+const serviceStatus = document.querySelector('.service-form select[name="status"]');
 if (serviceStatus) {
   const updateSignature = () => {
     const complete = ['Selesai', 'Sudah Diambil'].includes(serviceStatus.value);
@@ -95,4 +95,47 @@ if (serviceStatus) {
   };
   serviceStatus.addEventListener('change', updateSignature);
   updateSignature();
+}
+
+document.querySelectorAll('[data-status-form]').forEach(form => {
+  const status = form.elements.new_status;
+  const update = () => {
+    const complete = ['Selesai', 'Sudah Diambil'].includes(status.value);
+    form.querySelector('[data-status-dates]').hidden = !complete;
+    for (const name of ['completed_date', 'warranty_date']) {
+      const field = form.elements[name];
+      field.disabled = !complete;
+      field.required = complete && name === 'completed_date';
+      if (!complete) field.value = '';
+    }
+    const cancelling = status.value === 'Dibatalkan' && form.dataset.currentStatus !== 'Dibatalkan';
+    form.querySelector('[data-status-cancel]').hidden = !cancelling;
+    form.elements.confirm_cancel.disabled = !cancelling;
+    form.elements.confirm_cancel.required = cancelling;
+    if (!cancelling) form.elements.confirm_cancel.checked = false;
+  };
+  status.addEventListener('change', update);
+  form.addEventListener('status:open', update);
+  update();
+});
+const statusDialog = document.querySelector('[data-status-dialog]');
+if (statusDialog && typeof statusDialog.showModal === 'function') {
+  const form = statusDialog.querySelector('form');
+  document.querySelectorAll('[data-status-open]').forEach(link => link.addEventListener('click', event => {
+    if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    let order;
+    try { order = JSON.parse(link.dataset.statusOrder); } catch { return; }
+    event.preventDefault();
+    form.reset();
+    form.action = link.href;
+    form.dataset.currentStatus = order.status;
+    for (const [name, value] of Object.entries({revision:order.revision, new_status:order.status, completed_date:order.completed_date, warranty_date:order.warranty_date, return_to:order.return_to})) form.elements[name].value = value ?? '';
+    form.elements.completed_date.min = order.received_date;
+    form.elements.warranty_date.min = order.received_date;
+    statusDialog.querySelector('[data-status-invoice]').textContent = order.invoice;
+    form.dispatchEvent(new Event('status:open'));
+    statusDialog.showModal();
+  }));
+  statusDialog.querySelectorAll('[data-status-close]').forEach(button => button.addEventListener('click', () => statusDialog.close()));
+  window.addEventListener('pageshow', event => { if (event.persisted && statusDialog.open) statusDialog.close(); });
 }

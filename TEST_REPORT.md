@@ -240,3 +240,24 @@ Runtime **5cd0e228fbec8f6f9f67017c5dbb9d7350a10663** dirilis melalui profil Imam
 Produksi **45 HTTP PASS + 14 browser PASS**, total akhir revisi **522 PASS, 0 FAIL, 0 BLOCKED**. Perintah HTTP: `php tests/production-smoke.php https://faeyza.dirgasatya.id`. Browser admin benar-benar login: tanggal Menunggu Sparepart kosong/disabled, pilihan Selesai/Sudah Diambil mengaktifkan kolom tanpa save, invoice lama menunjukkan strip, kedua filter Dihapus tersedia, kedua konfirmasi memakai label benar, Batal mempertahankan stok 5, status pesanan tetap Menunggu Sparepart, dan console error 0. Form/konfirmasi pada viewport aktual 375px tanpa overflow. Satu percobaan viewport produksi memakai ukuran host alih-alih CSS pixels; adapter dikalibrasi ulang dan assertion diulang PASS, bukti awal tetap disimpan di archive-live-initial-attempt.json.
 
 `php bin/doctor.php` produksi: PHP 8.4.27, MariaDB 11.4.13/faeyza_service, kolom/tabel v3 OK, storage writable, timezone Asia/Jakarta. Hak runtime tetap SELECT/INSERT/UPDATE hanya pada faeyza_service; tidak ada file error log aplikasi. Bukti: archive-production-smoke.txt, archive-live-results.json, archive-deployment-state.txt, archive-migration-state.txt, archive-production-doctor.txt, archive-production-health.txt. Screenshot archive-production-delete-part-mobile.png dan archive-production-dates-mobile.png diperiksa visual. Server QA 8081 dihentikan; development 8080 tetap berjalan. Status revisi COMPLETE.
+
+## Ubah status cepat — source dan push main
+
+Admin mendapat aksi Ubah status pada daftar/detail servis. Dialog hanya memuat status, tanggal selesai/garansi untuk status final, dan konfirmasi pembatalan. Endpoint service-status mengubah tiga kolom tersebut saja dengan row lock/revision; kontak/perangkat/biaya/invoice/catatan/tanda tangan tetap utuh. Logika tanggal dan pengembalian stok dipakai bersama dengan Edit servis. Halaman status ringkas tetap tersedia sebagai fallback. Tidak ada migrasi database atau dependensi produksi baru.
+
+| Suite | Tujuan | Hasil aktual | Perintah/bukti |
+| --- | --- | --- | --- |
+| Native/domain/HTTP | Regresi lama, status saja, otorisasi/CSRF, tanggal, field tampering, data tetap utuh, stok, double submit, stale edit, dua proses status bersamaan | 297 PASS, 0 FAIL | tests/test.ps1 -Php C:\project\bengkel-runtime\php\php.exe; quick-status-integration-output.txt, integration-results.json |
+| Browser bisnis penuh | Registrasi/login, pengajuan, stok 10 menjadi 8, biaya Rp150.000, selesai/garansi, tanda tangan, pelanggan/IDOR, akun dan formulir, viewport | 124 PASS, 0 FAIL | runBrowserE2E dari tests/browser-e2e.mjs; quick-status-business-results.json |
+| Browser status cepat | Dialog daftar/detail, tujuh status, tanggal wajib, konfirmasi, stok 8 kembali 10, Batal/Escape, fallback, pelanggan, responsive | 29 PASS, 0 FAIL | runQuickStatus dari tests/quick-status.mjs; quick-status-ui-results.json |
+
+Total final revisi ini **450 PASS, 0 FAIL, 0 BLOCKED**. Dialog daftar/detail serta halaman status ringkas diperiksa pada 375/768/1440px; tanpa overflow horizontal. Screenshot quick-status-dates-mobile.png dan quick-status-cancel-mobile.png benar-benar memperlihatkan tanggal/konfirmasi dan telah diperiksa visual. Console browser tidak memiliki error. Lint PHP, node --check untuk JS/module test, dan git diff --check dijalankan. Log PHP/server QA tidak memiliki fatal error, warning atau parse error.
+
+Masalah yang ditemukan dan diperbaiki:
+
+- Assertion native menemukan tautan status ikut muncul pada kartu pelanggan karena penggantian template terlalu luas. Dikembalikan ke badge biasa; regresi final 297 PASS. Endpoint sejak awal tetap menolak pelanggan.
+- Pemeriksaan visual menemukan dialog dapat tertutup oleh pageshow saat pemuatan awal belum selesai. Penutupan kini hanya untuk pemulihan bfcache (event.persisted); suite browser penuh dan dialog diulang PASS. Pemeriksaan responsive juga memastikan dialog tetap terbuka.
+- Pembacaan form.elements pada adapter browser tidak mendukung akses properti bernama; assertion memakai querySelector tanpa mengubah perilaku aplikasi.
+- Pengulangan beberapa suite dalam 15 menit mengenai rate limit login yang memang aktif. Bucket hanya faeyza_test dibersihkan melalui tests/reset-login-limits.php, kemudian suite diulang. Guard script benar-benar diuji menolak DB_NAME=faeyza_service sebelum koneksi/query. Tidak ada pelemahan rate limit produksi.
+
+Seluruh simulasi memakai database faeyza_test; tidak ada perubahan pesanan, akun, stok atau skema produksi. Deployment manual Coolify tidak dijalankan pada revisi ini, sesuai permintaan implementasi dan push main. Hasil produksi pada bagian sebelumnya berlaku bagi runtime sebelumnya. UI/form invoice cetak tidak diubah sehingga suite PDF tidak dijalankan ulang pada revisi ini.

@@ -2,11 +2,11 @@
 declare(strict_types=1);
 $page=$_GET['page']??'dashboard';
 if (!is_string($page)) abort_page(404);
-$routes=['login','admin-login','register','logout','account','customer-password','customer-delete','customer-restore','part-delete','part-restore','dashboard','orders','invoices','service-new','service-edit','order','invoice','success','customers','customer','customer-new','customer-edit','parts','part','part-new','part-edit'];
+$routes=['login','admin-login','register','logout','account','customer-password','customer-delete','customer-restore','part-delete','part-restore','dashboard','orders','invoices','service-new','service-edit','service-status','order','invoice','success','customers','customer','customer-new','customer-edit','parts','part','part-new','part-edit'];
 if (!in_array($page,$routes,true)) abort_page(404);
 $method=$_SERVER['REQUEST_METHOD'];
 if (!in_array($method,['GET','POST'],true)) { header('Allow: GET, POST'); abort_page(405); }
-$adminRoutes=['customers','customer','customer-new','customer-edit','customer-password','customer-delete','customer-restore','part-delete','part-restore','parts','part','part-new','part-edit','service-edit'];
+$adminRoutes=['customers','customer','customer-new','customer-edit','customer-password','customer-delete','customer-restore','part-delete','part-restore','parts','part','part-new','part-edit','service-edit','service-status'];
 $user=current_user();
 if (!in_array($page,['login','admin-login','register'],true)) $user=require_login(in_array($page,$adminRoutes,true)?'admin-login':'login');
 if (in_array($page,$adminRoutes,true)) $user=require_admin();
@@ -106,6 +106,21 @@ if (in_array($page,['order','invoice','success'],true)) {
         $available=Database::all('SELECT p.*,COALESCE(sop.quantity,0) allocated FROM spare_parts p LEFT JOIN service_order_parts sop ON sop.spare_part_id=p.id AND sop.service_order_id=? WHERE p.deleted_at IS NULL ORDER BY p.name',[$id]);
     }
     render('order',compact('order','page','parts','available','error')); return;
+}
+if ($page==='service-status') {
+    $statusOrder=Orders::get($id,$user); if (!$statusOrder) abort_page(404);
+    $returnTo=($method==='POST'?($_POST['return_to']??'order'):($_GET['return_to']??'order'));
+    if (!is_string($returnTo) || !in_array($returnTo,['order','orders'],true)) abort_page(400);
+    if ($method==='POST') {
+        try {
+            Orders::changeStatus($id,$_POST,$user);
+            flash('Status servis berhasil diperbarui.');
+            redirect($returnTo,$returnTo==='order'?['id'=>$id]:[]);
+        } catch(ValidationException $e) { $error=$e->getMessage(); http_response_code(422); }
+    } else {
+        $data=['new_status'=>$statusOrder['status'],'revision'=>$statusOrder['revision'],'completed_date'=>Orders::isComplete($statusOrder)?$statusOrder['completed_date']:null,'warranty_date'=>Orders::isComplete($statusOrder)?$statusOrder['warranty_date']:null];
+    }
+    render('service-status',compact('statusOrder','data','returnTo','error')); return;
 }
 // Penggunaan sparepart dikirim ke service-edit, selalu berotorisasi admin.
 if ($page==='service-new' || $page==='service-edit') {
