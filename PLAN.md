@@ -135,4 +135,5 @@ Status deployment: COMPLETE. Kedua container healthy, admin login/logout/login u
 
 - [x] Dalam proses mencakup Menunggu Konfirmasi/Diterima/Dalam Pengerjaan/Menunggu Sparepart; Selesai mencakup Selesai/Sudah Diambil. Dibatalkan di luar keduanya.
 - [x] 349 native + 17 browser kelompok + 124 bisnis + 29 dialog + 21 filter/cetak + 14 unit JS PASS (554).
-- [ ] Push/redeploy pengelompokan dan verifikasi produksi.
+- [x] Runtime 998a1f0 dipush main, deployment oaifw50yvtjbrsejurrnuwqc Success/29 detik; 79 produksi PASS, health dan doctor OK.
+- [x] Dokumentasi hasil dan cleanup server QA 8081 selesai. Pemeriksaan Android manual tetap dicatat pada fase keluhan cetak.
