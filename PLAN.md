@@ -121,3 +121,4 @@ Status deployment: COMPLETE. Kedua container healthy, admin login/logout/login u
 - [x] Endpoint khusus admin, CSRF, validasi tanggal, revision locking, pembatalan/pengembalian stok atomik.
 - [x] 297 backend/native/HTTP + 124 browser bisnis + 29 browser dialog PASS; 375/768/1440px, validasi, race, stok dan role.
 - [x] Dokumentasi dan source 4238066 dipush ke main; tidak menjalankan deployment manual Coolify. QA 8081 dihentikan, development 8080 tetap berjalan.
+- [x] Sesuai permintaan berikutnya, redeploy runtime 62cc1d2 ke Coolify; deployment ugya9ldmwfbpta4nmp0blrp4 Success, healthcheck Healthy, doctor OK, 47 HTTP + 25 browser produksi PASS.

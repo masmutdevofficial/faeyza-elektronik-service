@@ -263,3 +263,14 @@ Masalah yang ditemukan dan diperbaiki:
 Seluruh simulasi memakai database faeyza_test; tidak ada perubahan pesanan, akun, stok atau skema produksi. Deployment manual Coolify tidak dijalankan pada revisi ini, sesuai permintaan implementasi dan push main. Hasil produksi pada bagian sebelumnya berlaku bagi runtime sebelumnya. UI/form invoice cetak tidak diubah sehingga suite PDF tidak dijalankan ulang pada revisi ini.
 
 Source **4238066cbe23b540a874be1b70d5f4b084c1c6e1** berhasil dipush ke origin/main. Lint akhir **53 file PHP OK**, kedua syntax check JavaScript OK, git diff --check bersih. Server QA 8081 dihentikan setelah identitas proses diverifikasi; development 8080 tetap berjalan. Artefak uji dan kredensial tidak masuk Git. Status pekerjaan implementasi/push COMPLETE.
+
+## Redeploy produksi Ubah status cepat
+
+Permintaan redeploy berikutnya telah dijalankan. Runtime 62cc1d2e1a038f1884e335b26f28d56c3b883a91, deployment ugya9ldmwfbpta4nmp0blrp4 Success dalam 33 detik, healthcheck Healthy. Tidak ada migrasi atau perubahan data servis. Source fitur sama dengan fase 450 pemeriksaan lokal di atas; suite lokal tersebut tidak dihitung sebagai eksekusi ulang pada fase redeploy.
+
+- **47 HTTP PASS, 0 FAIL**: `php tests/production-smoke.php https://faeyza.dirgasatya.id`. Seluruh pemeriksaan keamanan/aset/login lama dan dua assertion baru memastikan guest GET/POST service-status diarahkan ke login admin. Bukti: quick-status-production-smoke.txt dan production-smoke-results.json.
+- **25 browser produksi PASS, 0 FAIL**: verifyLiveQuickStatus dari tests/quick-status-production.mjs, sesi admin profil Imam. Aset v8, aksi pada setiap baris, dialog daftar/detail, tujuh status, tanggal wajib/hanya aktif untuk final, konfirmasi pembatalan, Batal/Tutup/Escape, fallback, serta 375/768/1440px. Pratinjau tidak mengubah status, biaya, atau rincian pesanan. Console error 0. Bukti: quick-status-live-results.json; quick-status-production-mobile.png diperiksa visual.
+
+Doctor produksi OK: PHP 8.4.27, MariaDB 11.4.13/faeyza_service, skema v3 tersedia, method changeStatus tersedia, storage writable dan aset privat terbaca. Izin runtime SELECT/INSERT/UPDATE hanya pada DB Faeyza. Data terbaca 4 akun/3 konsumen/3 servis/1 sparepart; tidak ada file error log aplikasi. Tidak membuat data uji atau menekan Simpan status di produksi. Transaksi penyimpanan/pengembalian stok telah diuji pada faeyza_test dalam fase sebelumnya. Bukti doctor/health/deployment tersimpan sebagai quick-status-production-doctor.txt, quick-status-production-health.txt dan quick-status-deployment-state.txt.
+
+Hasil fase redeploy: **72 PASS, 0 FAIL, 0 BLOCKED**. Total fase implementasi dan rilis fitur: **522 PASS**. Lint PHP tests/production-smoke.php, node --check tests/quick-status-production.mjs dan git diff --check juga lulus. Tambahan commit sesudah rilis hanya dokumentasi/script QA; kode runtime tidak berubah. Status redeploy COMPLETE.

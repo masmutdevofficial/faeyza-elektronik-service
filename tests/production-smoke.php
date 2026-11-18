@@ -68,6 +68,10 @@ try {
         verify($response['status']===303 && str_contains($response['headers'],'/admin/'),$route.' requires admin login');
     }
     verify(http('/assets/icons/mdi/delete-outline.svg')['status']===200 && http('/assets/icons/mdi/restore.svg')['status']===200,'Local delete and restore icons available');
+    foreach(['GET','POST'] as $method) {
+        $response=http('/index.php?page=service-status&id=1',$method);
+        verify($response['status']===303 && str_contains($response['headers'],'/admin/'),'Quick status '.$method.' requires admin login');
+    }
 } catch(Throwable $e) { verify(false,$e->getMessage()); }
 finally { if(is_file($cookie))unlink($cookie); }
 $failed=count(array_filter($results,fn($r)=>$r['status']==='FAIL'));
