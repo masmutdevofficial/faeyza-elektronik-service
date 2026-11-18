@@ -120,4 +120,4 @@ Status deployment: COMPLETE. Kedua container healthy, admin login/logout/login u
 - [x] Dialog Ubah status pada daftar/detail servis dan halaman ringkas cadangan tanpa JavaScript.
 - [x] Endpoint khusus admin, CSRF, validasi tanggal, revision locking, pembatalan/pengembalian stok atomik.
 - [x] 297 backend/native/HTTP + 124 browser bisnis + 29 browser dialog PASS; 375/768/1440px, validasi, race, stok dan role.
-- [ ] Dokumentasi dan push ke main sesuai permintaan; tidak menjalankan deployment manual Coolify.
+- [x] Dokumentasi dan source 4238066 dipush ke main; tidak menjalankan deployment manual Coolify. QA 8081 dihentikan, development 8080 tetap berjalan.
