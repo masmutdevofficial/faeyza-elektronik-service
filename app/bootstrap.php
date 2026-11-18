@@ -16,6 +16,7 @@ ini_set('log_errors', '1');
 ini_set('error_log', ROOT.'/storage/logs/php.log');
 require_once ROOT.'/app/Database.php';
 require_once ROOT.'/app/Domain.php';
+require_once ROOT.'/app/RecordDeletion.php';
 require_once ROOT.'/app/helpers.php';
 if (PHP_SAPI !== 'cli' || defined('HTTP_TEST')) {
     ini_set('session.use_strict_mode', '1');

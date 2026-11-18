@@ -2,11 +2,11 @@
 declare(strict_types=1);
 $page=$_GET['page']??'dashboard';
 if (!is_string($page)) abort_page(404);
-$routes=['login','admin-login','register','logout','account','customer-password','dashboard','orders','invoices','service-new','service-edit','order','invoice','success','customers','customer','customer-new','customer-edit','parts','part','part-new','part-edit'];
+$routes=['login','admin-login','register','logout','account','customer-password','customer-delete','customer-restore','part-delete','part-restore','dashboard','orders','invoices','service-new','service-edit','order','invoice','success','customers','customer','customer-new','customer-edit','parts','part','part-new','part-edit'];
 if (!in_array($page,$routes,true)) abort_page(404);
 $method=$_SERVER['REQUEST_METHOD'];
 if (!in_array($method,['GET','POST'],true)) { header('Allow: GET, POST'); abort_page(405); }
-$adminRoutes=['customers','customer','customer-new','customer-edit','customer-password','parts','part','part-new','part-edit','service-edit'];
+$adminRoutes=['customers','customer','customer-new','customer-edit','customer-password','customer-delete','customer-restore','part-delete','part-restore','parts','part','part-new','part-edit','service-edit'];
 $user=current_user();
 if (!in_array($page,['login','admin-login','register'],true)) $user=require_login(in_array($page,$adminRoutes,true)?'admin-login':'login');
 if (in_array($page,$adminRoutes,true)) $user=require_admin();
@@ -53,7 +53,7 @@ if ($page==='account') {
     render('account',compact('data','error')); return;
 }
 if ($page==='customer-password') {
-    $customer=Database::one("SELECT c.id,c.name,u.phone FROM customers c JOIN users u ON u.id=c.user_id WHERE c.id=? AND u.role='customer'",[$id]);
+    $customer=Database::one("SELECT c.id,c.name,u.phone FROM customers c JOIN users u ON u.id=c.user_id WHERE c.id=? AND u.role='customer' AND c.deleted_at IS NULL",[$id]);
     if (!$customer) abort_page(404);
     if ($method==='POST') {
         try { Accounts::resetCustomerPassword($id,$_POST,$user); flash('Password pelanggan berhasil diperbarui.'); redirect('customer',['id'=>$id]); }
@@ -61,13 +61,31 @@ if ($page==='customer-password') {
     }
     render('customer-password',compact('customer','error')); return;
 }
+if (in_array($page,['customer-delete','customer-restore','part-delete','part-restore'],true)) {
+    $kind=str_starts_with($page,'customer-')?'customer':'part'; $label=$kind==='customer'?'konsumen':'sparepart';
+    $table=$kind==='customer'?'customers':'spare_parts';
+    $record=Database::one('SELECT * FROM '.$table.' WHERE id=?',[$id]); if (!$record) abort_page(404);
+    $restore=str_ends_with($page,'-restore');
+    if ($restore && $method!=='POST') abort_page(405);
+    if ($method==='POST') {
+        try {
+            if (!$restore && ($_POST['confirm']??'')!=='1') throw new ValidationException('Centang konfirmasi penghapusan.');
+            RecordDeletion::change($kind,$id,!$restore,$user);
+            flash(ucfirst($label).($restore?' berhasil dipulihkan.':' dihapus dari daftar aktif.'));
+            if ($restore) redirect($kind,['id'=>$id]);
+            redirect($kind==='customer'?'customers':'parts',['deleted'=>'1']);
+        } catch(ValidationException $e) { $error=$e->getMessage(); http_response_code(422); }
+    }
+    if ($record['deleted_at']!==null) redirect($kind,['id'=>$id]);
+    render('record-delete',compact('record','kind','label','error')); return;
+}
 if ($page==='dashboard') {
     if ($method!=='GET') abort_page(405);
     $filter=$user['role']==='admin'?'':' JOIN customers c ON c.id=s.customer_id WHERE c.user_id=?';
     $params=$user['role']==='admin'?[]:[$user['id']];
     $stats=Database::one("SELECT COUNT(*) total,COALESCE(SUM(status='Menunggu Konfirmasi'),0) waiting,COALESCE(SUM(status IN ('Diterima','Dalam Pengerjaan','Menunggu Sparepart')),0) working,COALESCE(SUM(status IN ('Selesai','Sudah Diambil')),0) done FROM service_orders s".$filter,$params);
-    $customers= $user['role']==='admin' ? Database::one('SELECT COUNT(*) n FROM customers')['n'] : null;
-    $low= $user['role']==='admin' ? Database::one('SELECT COUNT(*) n FROM spare_parts WHERE stock<=minimum_stock')['n'] : null;
+    $customers= $user['role']==='admin' ? Database::one('SELECT COUNT(*) n FROM customers WHERE deleted_at IS NULL')['n'] : null;
+    $low= $user['role']==='admin' ? Database::one('SELECT COUNT(*) n FROM spare_parts WHERE stock<=minimum_stock AND deleted_at IS NULL')['n'] : null;
     $recent=array_slice(Orders::listing($user),0,6);
     render('dashboard',compact('stats','customers','low','recent')); return;
 }
@@ -84,8 +102,8 @@ if (in_array($page,['order','invoice','success'],true)) {
     if ($page==='invoice') { render('invoice',compact('order')); return; }
     $parts=[]; $available=[];
     if ($user['role']==='admin') {
-        $parts=Database::all('SELECT sop.*,p.name,p.sku,p.unit,p.stock FROM service_order_parts sop JOIN spare_parts p ON p.id=sop.spare_part_id WHERE sop.service_order_id=? ORDER BY p.name',[$id]);
-        $available=Database::all('SELECT p.*,COALESCE(sop.quantity,0) allocated FROM spare_parts p LEFT JOIN service_order_parts sop ON sop.spare_part_id=p.id AND sop.service_order_id=? ORDER BY p.name',[$id]);
+        $parts=Database::all('SELECT sop.*,p.name,p.sku,p.unit,p.stock,p.deleted_at FROM service_order_parts sop JOIN spare_parts p ON p.id=sop.spare_part_id WHERE sop.service_order_id=? ORDER BY p.name',[$id]);
+        $available=Database::all('SELECT p.*,COALESCE(sop.quantity,0) allocated FROM spare_parts p LEFT JOIN service_order_parts sop ON sop.spare_part_id=p.id AND sop.service_order_id=? WHERE p.deleted_at IS NULL ORDER BY p.name',[$id]);
     }
     render('order',compact('order','page','parts','available','error')); return;
 }
@@ -98,7 +116,7 @@ if ($page==='service-new' || $page==='service-edit') {
     if ($user['role']==='admin' && !$editing && array_key_exists('customer_id',$_GET)) {
         try { $selectedCustomerId=Validate::integer($_GET['customer_id'],1); }
         catch(ValidationException) { abort_page(400); }
-        $lockedCustomer=Database::one('SELECT c.id,c.name,c.address,u.phone FROM customers c JOIN users u ON u.id=c.user_id WHERE c.id=?',[$selectedCustomerId]);
+        $lockedCustomer=Database::one('SELECT c.id,c.name,c.address,u.phone FROM customers c JOIN users u ON u.id=c.user_id WHERE c.id=? AND c.deleted_at IS NULL',[$selectedCustomerId]);
         if (!$lockedCustomer) abort_page(404);
     }
     if ($method==='POST') {
@@ -118,8 +136,8 @@ if ($page==='service-new' || $page==='service-edit') {
         } catch(ValidationException $e) {
             $error=$e->getMessage(); http_response_code(422);
             if ($editing && ($_POST['action']??'')==='allocate') {
-                $parts=Database::all('SELECT sop.*,p.name,p.sku,p.unit,p.stock FROM service_order_parts sop JOIN spare_parts p ON p.id=sop.spare_part_id WHERE sop.service_order_id=?',[$id]);
-                $available=Database::all('SELECT p.*,COALESCE(sop.quantity,0) allocated FROM spare_parts p LEFT JOIN service_order_parts sop ON sop.spare_part_id=p.id AND sop.service_order_id=? ORDER BY p.name',[$id]);
+                $parts=Database::all('SELECT sop.*,p.name,p.sku,p.unit,p.stock,p.deleted_at FROM service_order_parts sop JOIN spare_parts p ON p.id=sop.spare_part_id WHERE sop.service_order_id=?',[$id]);
+                $available=Database::all('SELECT p.*,COALESCE(sop.quantity,0) allocated FROM spare_parts p LEFT JOIN service_order_parts sop ON sop.spare_part_id=p.id AND sop.service_order_id=? WHERE p.deleted_at IS NULL ORDER BY p.name',[$id]);
                 render('order',compact('order','page','parts','available','error')); return;
             }
         }
@@ -129,7 +147,7 @@ if ($page==='service-new' || $page==='service-edit') {
         $data['submission_key']=token();
         if ($order) $data['accessories']=json_decode($order['accessories'],true);
     }
-    $customers=$user['role']==='admin' && !$editing && !$lockedCustomer?Database::all('SELECT c.id,c.name,c.address,u.phone FROM customers c JOIN users u ON u.id=c.user_id ORDER BY c.name'):[];
+    $customers=$user['role']==='admin' && !$editing && !$lockedCustomer?Database::all('SELECT c.id,c.name,c.address,u.phone FROM customers c JOIN users u ON u.id=c.user_id WHERE c.deleted_at IS NULL ORDER BY c.name'):[];
     if ($lockedCustomer) $data['customer_id']=$lockedCustomer['id'];
     if ($user['role']==='admin' && !$editing) {
         foreach($lockedCustomer?[$lockedCustomer]:$customers as $customer) if(($data['customer_id']??'')==$customer['id']) {
@@ -146,13 +164,15 @@ if ($page==='customers') {
     try { $q=Validate::text($_GET,'q',150,false); } catch(ValidationException) { abort_page(400); }
     $phone=$q; try{$phone=Validate::phone($q);}catch(ValidationException){}
     $p=max(1,min(100000,(int)(is_scalar($_GET['p']??1)?($_GET['p']??1):1)));
-    $customers=Database::all('SELECT c.*,u.phone,(SELECT COUNT(*) FROM service_orders s WHERE s.customer_id=c.id) total FROM customers c JOIN users u ON u.id=c.user_id WHERE c.name LIKE ? OR u.phone LIKE ? ORDER BY c.id DESC LIMIT 20 OFFSET '.(($p-1)*20),['%'.$q.'%','%'.$phone.'%']);
-    render('customers',compact('customers','q','p')); return;
+    $deleted=($_GET['deleted']??'')==='1';
+    $customers=Database::all('SELECT c.*,u.phone,(SELECT COUNT(*) FROM service_orders s WHERE s.customer_id=c.id) total FROM customers c JOIN users u ON u.id=c.user_id WHERE (c.name LIKE ? OR u.phone LIKE ?) AND c.deleted_at IS '.($deleted?'NOT NULL':'NULL').' ORDER BY c.id DESC LIMIT 20 OFFSET '.(($p-1)*20),['%'.$q.'%','%'.$phone.'%']);
+    render('customers',compact('customers','q','p','deleted')); return;
 }
 if (in_array($page,['customer','customer-edit','customer-new'],true)) {
     $editing=$page!=='customer-new';
     $customer=$editing?Database::one('SELECT c.*,u.phone FROM customers c JOIN users u ON u.id=c.user_id WHERE c.id=?',[$id]):null;
     if ($editing && !$customer) abort_page(404);
+    if ($editing && $page!=='customer' && $customer['deleted_at']!==null) abort_page(404);
     if ($page==='customer') {
         if ($method!=='GET') abort_page(405);
         $orders=Database::all('SELECT * FROM service_orders WHERE customer_id=? ORDER BY id DESC LIMIT 100',[$id]); render('customer',compact('customer','orders')); return;
@@ -168,13 +188,15 @@ if ($page==='parts') {
     try { $q=Validate::text($_GET,'q',150,false); } catch(ValidationException) { abort_page(400); }
     $p=max(1,min(100000,(int)(is_scalar($_GET['p']??1)?($_GET['p']??1):1)));
     $low=($_GET['low']??'')==='1';
-    $parts=Database::all('SELECT * FROM spare_parts WHERE (sku LIKE ? OR name LIKE ?)'.($low?' AND stock<=minimum_stock':'').' ORDER BY id DESC LIMIT 20 OFFSET '.(($p-1)*20),['%'.$q.'%','%'.$q.'%']);
-    render('parts',compact('parts','q','p','low')); return;
+    $deleted=($_GET['deleted']??'')==='1';
+    $parts=Database::all('SELECT * FROM spare_parts WHERE (sku LIKE ? OR name LIKE ?) AND deleted_at IS '.($deleted?'NOT NULL':'NULL').($low?' AND stock<=minimum_stock':'').' ORDER BY id DESC LIMIT 20 OFFSET '.(($p-1)*20),['%'.$q.'%','%'.$q.'%']);
+    render('parts',compact('parts','q','p','low','deleted')); return;
 }
 if (in_array($page,['part','part-new','part-edit'],true)) {
     $editing=$page!=='part-new';
     $part=$editing?Database::one('SELECT * FROM spare_parts WHERE id=?',[$id]):null;
     if ($editing && !$part) abort_page(404);
+    if ($editing && $page!=='part' && $part['deleted_at']!==null) abort_page(404);
     if ($method==='POST') {
         try {
             if ($page==='part') {

@@ -100,3 +100,16 @@ Status deployment: COMPLETE. Kedua container healthy, admin login/logout/login u
 - [x] Regresi 214 native/HTTP PASS termasuk data custom, XSS, dan kepemilikan.
 - [x] 14 browser PASS pada akun pelanggan, termasuk data normal/custom di 375/768/1440px.
 - [x] Runtime 65ee1c7 dirilis; produksi 40 HTTP + 3 rincian data PASS tanpa perubahan data servis.
+
+## Tanggal selesai dan penghapusan yang dapat dipulihkan
+
+- [x] Server/UI membatasi tanggal selesai/garansi pada Selesai/Sudah Diambil; status lain mengosongkan tanggal saat disimpan.
+- [x] Invoice/detail tidak menampilkan tanggal lama yang tidak sesuai status.
+- [x] Hapus/pulihkan konsumen dan sparepart, konfirmasi, filter Dihapus, audit operator/waktu.
+- [x] Akun konsumen dihapus tidak bisa login; versi sesi mencegah sesi lama hidup kembali sesudah restore.
+- [x] Sparepart dihapus tetap menyimpan stok/histori, menolak stok masuk/penggunaan baru, dan menerima pengembalian/pembatalan.
+- [x] Migration v3 additive/idempotent di development/testing; SQL pre-deploy diverifikasi lokal.
+- [x] 264 native/HTTP PASS, termasuk concurrency hapus/stok masuk dan label konfirmasi.
+- [x] 124 browser bisnis + 33 interaksi/tata letak hapus/pulihkan + 42 cetak PDF PASS.
+- [ ] Backup privat produksi, migrasi khusus DB Faeyza, rilis, doctor, dan verifikasi non-destruktif.
+- [ ] Dokumentasi/laporan akhir.

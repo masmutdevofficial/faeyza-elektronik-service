@@ -30,6 +30,10 @@ Masukkan password unik minimal 6 karakter melalui stdin privat ketika diminta. J
 
 ## Verifikasi dan pemeliharaan
 
+Migrasi v3 menambahkan penanda penghapusan konsumen/sparepart, versi sesi pengguna, dan tabel audit record_events. Pada volume lama, buat backup privat khusus faeyza_service, lalu jalankan `php bin/migrate.php --only-db=faeyza_service` dengan akun migrasi Faeyza sebelum merilis kode v3. Migrasi additive/idempotent; tidak menghapus atau mengubah baris transaksi lama. Jangan memberikan CREATE/ALTER/DELETE kepada user runtime. Database baru langsung memakai schema.sql terbaru. `php bin/doctor.php` memeriksa seluruh kolom dan tabel baru.
+
+Rollback aplikasi setelah v3 tidak memerlukan penghapusan kolom/tabel. Namun, versi aplikasi sebelum v3 tidak memahami status Dihapus; jangan mengaktifkannya kembali setelah ada penghapusan tanpa meninjau akses akun yang dinonaktifkan. Simpan backup privat dan gunakan perbaikan maju bila memungkinkan.
+
 Migrasi v2 menambahkan `service_orders.show_workshop_signature` dengan default 1. Pada DB lama, lakukan backup dan jalankan `php bin/migrate.php --only-db=faeyza_service` dengan akun migrasi Faeyza yang memiliki ALTER/INSERT sebelum merilis kode baru. Jangan menambah hak runtime. CLI menolak target yang tidak cocok dengan DB_NAME, memakai advisory lock, memeriksa keberadaan kolom, dan aman dijalankan ulang. Database Docker baru sudah memuat kolom dari schema.sql. Aset tanda tangan berada di config/assets, bukan public; image web harus dibangun ulang agar aset tersedia.
 
 1. Periksa Deployment Logs, status kedua service, dan `php bin/doctor.php`.

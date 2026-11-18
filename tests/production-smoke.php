@@ -63,6 +63,11 @@ try {
     verify(http('/admin/','POST',['phone'=>'invalid','password'=>'invalid'])['status']===419,'Admin login requires CSRF');
     verify(substr_count($register['body'],'data-password-toggle')===2 && substr_count($body,'data-password-toggle')===1 && substr_count($adminPage['body'],'data-password-toggle')===1,'Password toggles exist on both logins and registration');
     verify(http('/assets/icons/mdi/eye-outline.svg')['status']===200 && http('/assets/icons/mdi/eye-off-outline.svg')['status']===200,'Local password visibility icons available');
+    foreach(['customer-delete','customer-restore','part-delete','part-restore'] as $route) {
+        $response=http('/index.php?page='.$route.'&id=1');
+        verify($response['status']===303 && str_contains($response['headers'],'/admin/'),$route.' requires admin login');
+    }
+    verify(http('/assets/icons/mdi/delete-outline.svg')['status']===200 && http('/assets/icons/mdi/restore.svg')['status']===200,'Local delete and restore icons available');
 } catch(Throwable $e) { verify(false,$e->getMessage()); }
 finally { if(is_file($cookie))unlink($cookie); }
 $failed=count(array_filter($results,fn($r)=>$r['status']==='FAIL'));

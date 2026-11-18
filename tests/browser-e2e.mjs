@@ -149,6 +149,6 @@ export async function runBrowserE2E({tab,viewport,fixture,save,base='http://127.
     await save('admin-account-desktop.jpg');
     for(const width of [375,768,1440])for(const route of ['dashboard','orders','invoices','customers','parts','service-new','customer-new','part-new','account']) await responsive(route,width);
     await size(1440);await goto('dashboard');await save('admin-desktop.jpg');
-    return {results,metrics,orderId,partId,invoice,warrantyDate};
+    return {results,metrics,orderId,partId,invoice,warrantyDate,customerPhone:phone,customerId:new URL(contextProfileUrl).searchParams.get('id')};
   } catch(error) { error.results=results;throw error; }
 }

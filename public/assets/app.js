@@ -81,11 +81,17 @@ if (customerPreview) {
 }
 const signatureSetting = document.querySelector('[data-signature-setting]');
 const serviceStatus = document.querySelector('select[name="status"]');
-if (signatureSetting && serviceStatus) {
+if (serviceStatus) {
   const updateSignature = () => {
     const complete = ['Selesai', 'Sudah Diambil'].includes(serviceStatus.value);
-    signatureSetting.hidden = !complete;
-    signatureSetting.querySelectorAll('input').forEach(input => { input.disabled = !complete; });
+    for (const name of ['completed_date','warranty_date']) {
+      const field = document.querySelector('input[name="' + name + '"]');
+      if (field) { field.disabled = !complete; field.required = name === 'completed_date' && complete; if (!complete) field.value = ''; }
+    }
+    if (signatureSetting) {
+      signatureSetting.hidden = !complete;
+      signatureSetting.querySelectorAll('input').forEach(input => { input.disabled = !complete; });
+    }
   };
   serviceStatus.addEventListener('change', updateSignature);
   updateSignature();

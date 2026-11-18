@@ -93,7 +93,7 @@ try {
     $stale=editData($oa,$admin);Orders::update($oa,editData($oa,$admin,['total_cost'=>'150000','status'=>'Dalam Pengerjaan']),$admin);
     rejects(fn()=>Orders::update($oa,$stale,$admin),'09 edit stale revision ditolak');
     rejects(fn()=>Orders::update($oa,editData($oa,$admin),$a),'06 konsumen tidak dapat mengubah biaya');
-    rejects(fn()=>Orders::update($oa,editData($oa,$admin,['warranty_date'=>'2026-12-17','completed_date'=>'']),$admin),'09 garansi tanpa tanggal selesai ditolak');
+    rejects(fn()=>Orders::update($oa,editData($oa,$admin,['status'=>'Selesai','warranty_date'=>'2026-12-17','completed_date'=>'']),$admin),'09 garansi tanpa tanggal selesai ditolak');
     $signatureOrder=Orders::create(fixture(),$a);
     Orders::update($signatureOrder,editData($signatureOrder,$admin,['status'=>'Selesai','completed_date'=>Clock::today()]),$admin);
     check(Orders::signatureVisible(Orders::get($signatureOrder,$a)),'14 selesai otomatis menampilkan tanda tangan');
@@ -258,6 +258,7 @@ try {
     require __DIR__.'/accounts.php';
     require __DIR__.'/auth-pages.php';
     require __DIR__.'/device-details.php';
+    require __DIR__.'/completion-deletion.php';
     // Fixture untuk browser: hanya testing, password acak tidak ditulis ke laporan.
     Database::query('DELETE FROM login_limits');
     file_put_contents(__DIR__.'/local-fixtures.json',json_encode(['password'=>$password,'admin_phone'=>'08170002466','customer_phone'=>'081822233344','other_phone'=>'081911122233','own_order'=>$webOrder,'other_order'=>$ob,'part'=>$part,'own_device'=>$deviceExpected,'device_edge_order'=>$deviceEdgeId,'device_edge_expected'=>$deviceEdgeExpected],JSON_PRETTY_PRINT));

@@ -10,7 +10,7 @@ Push-Location $projectRoot
 try{
  & $Php tests/render-invoices.php
  if($LASTEXITCODE){throw 'Ekspor HTML invoice gagal'}
- foreach($name in @('invoice-initial','invoice-final','invoice-long')){
+ foreach($name in @('invoice-initial','invoice-final','invoice-long','invoice-pending')){
   $pdfPath=Join-Path $PSScriptRoot "artifacts/$name.pdf"
   $htmlPath=Join-Path $PSScriptRoot "artifacts/$name.html"
   $profilePath=Join-Path ([IO.Path]::GetTempPath()) "faeyza-print-$name"

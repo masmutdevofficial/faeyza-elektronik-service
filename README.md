@@ -153,6 +153,18 @@ Rate limit login: maksimal 8 percobaan per nomor dan per IP dalam jendela 15 men
 
 Riwayat hasil aktual dan batas verifikasi tersedia di TEST_REPORT.md. Pengujian lokal memakai PHP development server dan MariaDB nyata; Apache produksi kemudian dijalankan dan diverifikasi pada container Coolify, lihat DEPLOYMENT_REPORT.md. XAMPP/shared hosting konvensional tidak dijalankan dalam sesi ini.
 
+## Tanggal penyelesaian servis
+
+Tanggal selesai dan garansi hanya aktif pada status **Selesai** atau **Sudah Diambil**. Tanggal selesai wajib untuk kedua status itu. Mengubah status ke status lain mengosongkan kedua tanggal ketika disimpan. Invoice/detail tidak menampilkan tanggal penyelesaian lama yang tidak sesuai status.
+
+## Hapus dan pulihkan data
+
+Admin membuka **Konsumen/Sparepart → detail → Hapus**, mencentang konfirmasi, lalu menekan tombol Hapus. Data hilang dari daftar aktif dan muncul pada filter **Dihapus**. Buka detail data tersebut lalu **Pulihkan** untuk mengaktifkannya kembali. Penghapusan/pemulihan dicatat di record_events beserta operator dan waktu.
+
+Penghapusan bersifat dapat dipulihkan, tanpa menghapus akun/relasi/invoice/pergerakan stok. Nomor HP dan SKU tetap unik/reservasi untuk data yang sama. Konsumen yang dihapus tidak bisa login atau mengajukan servis; semua sesi lamanya dicabut, termasuk setelah pemulihan. Admin tetap dapat membaca invoice historis.
+
+Stok sparepart yang dihapus tetap tersimpan. Stok masuk dan penambahan penggunaan ditolak sampai dipulihkan. Pengurangan penggunaan atau pembatalan servis tetap mengembalikan stok dengan audit normal. Penghapusan sendiri tidak mengubah stok maupun mencatat pergerakan palsu.
+
 ## Pesanan dari detail konsumen
 
 Untuk pesanan dari **Konsumen → detail konsumen → Servis baru**, pemilik pesanan sudah ditetapkan. Form menampilkan ringkasan kontak tanpa dropdown atau tautan Tambah konsumen. Koreksi kontak penerimaan tetap tersedia; tombol Kembali menuju detail konsumen yang sama. Backend menolak customer_id berbeda pada POST formulir ini. Form **Servis baru dari menu umum** tetap menyediakan dropdown konsumen.

@@ -69,8 +69,8 @@ $accessories=json_decode($order['accessories'],true);
                     <div><dt>Kerusakan</dt><dd><?=nl2br(e($order['complaint']))?></dd></div>
                     <div><dt>Pengerjaan di</dt><dd><?=e($order['location'])?></dd></div>
                     <div><dt>Status servis</dt><dd><?=e($order['status'])?></dd></div>
-                    <div><dt>Selesai service</dt><dd><?=e(human_date($order['completed_date']))?></dd></div>
-                    <div><dt>Garansi sampai</dt><dd><?=e(human_date($order['warranty_date']))?></dd></div>
+                    <div><dt>Selesai service</dt><dd><?=e(human_date(Orders::isComplete($order)?$order['completed_date']:null))?></dd></div>
+                    <div><dt>Garansi sampai</dt><dd><?=e(human_date(Orders::isComplete($order)?$order['warranty_date']:null))?></dd></div>
                 </dl>
             </td>
             <td data-heading="Biaya" class="nota-cost-cell">

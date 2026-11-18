@@ -35,8 +35,8 @@ function badge(string $status): string {
 }
 function current_user(): ?array {
     if (empty($_SESSION['user_id'])) return null;
-    $user=Database::one('SELECT id,phone,role,password_hash FROM users WHERE id=?',[$_SESSION['user_id']]);
-    if (!$user || !isset($_SESSION['auth_stamp']) || !hash_equals(Auth::stamp($user),(string)$_SESSION['auth_stamp'])) { $_SESSION=['csrf'=>token(),'last_seen'=>time()]; session_regenerate_id(true); return null; }
+    $user=Database::one('SELECT u.id,u.phone,u.role,u.password_hash,u.session_version,c.deleted_at customer_deleted_at FROM users u LEFT JOIN customers c ON c.user_id=u.id WHERE u.id=?',[$_SESSION['user_id']]);
+    if (!$user || ($user['role']==='customer' && $user['customer_deleted_at']!==null) || !isset($_SESSION['auth_stamp']) || !hash_equals(Auth::stamp($user),(string)$_SESSION['auth_stamp'])) { $_SESSION=['csrf'=>token(),'last_seen'=>time()]; session_regenerate_id(true); return null; }
     unset($user['password_hash']); return $user;
 }
 function sign_in(array $user): void { session_regenerate_id(true); $_SESSION=['user_id'=>$user['id'],'auth_stamp'=>Auth::stamp($user),'csrf'=>token(),'last_seen'=>time()]; }

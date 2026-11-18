@@ -8,7 +8,7 @@ base = Path(__file__).parent / 'artifacts'
 browser_fixture = json.loads((base.parent / 'local-browser-fixtures.json').read_text(encoding='utf-8'))
 expected_warranty = '/'.join(reversed(browser_fixture.get('warrantyDate', '2026-12-17').split('-')))
 results = []
-for name in ('invoice-initial', 'invoice-final', 'invoice-long'):
+for name in ('invoice-initial', 'invoice-final', 'invoice-long', 'invoice-pending'):
     doc = PdfReader(base / f'{name}.pdf')
     text = '\n'.join(p.extract_text() or '' for p in doc.pages)
     checks = {
@@ -25,6 +25,9 @@ for name in ('invoice-initial', 'invoice-final', 'invoice-long'):
         checks['10 invoice awal biaya belum ditetapkan'] = 'Biaya belum ditetapkan' in text
         checks['10 invoice standar satu halaman'] = len(doc.pages) == 1
     checks['16 nama pihak bengkel Asmat tanpa sapaan'] = 'Asmat' in text and 'Bpk.' not in text
+    if name == 'invoice-pending':
+        checks['22 tanggal selesai dan garansi lama tidak tercetak untuk status menunggu'] = 'Menunggu Sparepart' in text and '05/04/2032' not in text and '05/04/2033' not in text
+        checks['22 invoice menunggu tidak mencetak gambar tanda tangan'] = sum(len(page.images) for page in doc.pages) == 1
     if name == 'invoice-final':
         checks['14 invoice selesai mencetak gambar tanda tangan'] = sum(len(page.images) for page in doc.pages) >= 2
         checks['10 invoice final biaya Rupiah dan garansi'] = 'Rp150.000' in text and expected_warranty in text

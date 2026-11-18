@@ -51,14 +51,14 @@ final class Validate {
 }
 final class Auth {
     public const PASSWORD_MIN=6;
-    public static function stamp(array $user): string { return hash('sha256',$user['id'].'|'.$user['phone'].'|'.$user['role'].'|'.$user['password_hash']); }
+    public static function stamp(array $user): string { $version=(int)($user['session_version']??1); return hash('sha256',$user['id'].'|'.$user['phone'].'|'.$user['role'].'|'.$user['password_hash'].($version>1?'|session:'.$version:'')); }
     public static function register(array $d): int {
         $phone=Validate::phone($d['phone']??''); $name=Validate::text($d,'name',150);
         $address=Validate::text($d,'address'); $password=Validate::password($d,'password',self::PASSWORD_MIN);
         try { return Database::tx(function() use($phone,$name,$address,$password) {
             Database::query('INSERT INTO users(phone,password_hash,role) VALUES (?,?,?)',[$phone,password_hash($password,PASSWORD_DEFAULT),'customer']);
             $id=Database::id(); Database::query('INSERT INTO customers(user_id,name,address) VALUES (?,?,?)',[$id,$name,$address]); return $id;
-        }); } catch(mysqli_sql_exception $e) { if ($e->getCode()===1062) throw new ValidationException('Nomor HP sudah terdaftar. Silakan login.'); throw $e; }
+        }); } catch(mysqli_sql_exception $e) { if ($e->getCode()===1062) throw new ValidationException('Nomor HP sudah terdaftar. Hubungi bengkel jika perlu pemulihan akun.'); throw $e; }
     }
     public static function login(string $phone,string $password,string $ip): array {
         // Dua bucket membatasi percobaan per nomor dan per IP, termasuk akun yang belum ada.
@@ -77,10 +77,10 @@ final class Auth {
             return true;
         });
         if (!$allowed) throw new ValidationException('Terlalu banyak percobaan login. Coba kembali dalam 15 menit.');
-        $u=Database::one('SELECT * FROM users WHERE phone=?',[$normalized]);
+        $u=Database::one('SELECT u.*,c.deleted_at customer_deleted_at FROM users u LEFT JOIN customers c ON c.user_id=u.id WHERE u.phone=?',[$normalized]);
         // Hash dummy menjaga proses verifikasi tetap dilakukan untuk nomor yang tidak terdaftar.
         $hash=$u['password_hash']??'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.';
-        if (!password_verify($password,$hash) || !$u) throw new ValidationException('Nomor HP atau password salah.');
+        if (!password_verify($password,$hash) || !$u || ($u['role']==='customer' && $u['customer_deleted_at']!==null)) throw new ValidationException('Nomor HP atau password salah.');
         if (password_needs_rehash($hash,PASSWORD_DEFAULT)) {
             $newHash=password_hash($password,PASSWORD_DEFAULT);
             if (Database::query('UPDATE users SET password_hash=? WHERE id=? AND password_hash=?',[$newHash,$u['id'],$hash])->affected_rows!==1) throw new ValidationException('Akun berubah. Silakan masuk kembali.');
@@ -127,21 +127,23 @@ final class Accounts {
         Database::tx(function() use($customerId,$verified,$password) {
             $admin=Database::one('SELECT * FROM users WHERE id=? FOR UPDATE',[$verified['id']]);
             if (!$admin || $admin['role']!=='admin' || !hash_equals($verified['password_hash'],$admin['password_hash'])) throw new ValidationException('Akun admin berubah. Silakan masuk kembali.');
-            $customer=Database::one("SELECT u.id FROM customers c JOIN users u ON u.id=c.user_id WHERE c.id=? AND u.role='customer' FOR UPDATE",[$customerId]);
+            $customer=Database::one("SELECT u.id FROM customers c JOIN users u ON u.id=c.user_id WHERE c.id=? AND u.role='customer' AND c.deleted_at IS NULL FOR UPDATE",[$customerId]);
             if (!$customer) throw new ValidationException('Konsumen tidak ditemukan.');
             Database::query('UPDATE users SET password_hash=? WHERE id=?',[password_hash($password,PASSWORD_DEFAULT),$customer['id']]);
         });
     }
 }
 final class Orders {
+    public const COMPLETED_STATUSES=['Selesai','Sudah Diambil'];
     public const STATUSES=['Menunggu Konfirmasi','Diterima','Dalam Pengerjaan','Menunggu Sparepart','Selesai','Sudah Diambil','Dibatalkan'];
     public const ITEMS=['TV','Speaker Aktif Bluetooth','Amplifier','Mixer Audio','Kipas Angin','Laptop','STB','Home Theatre'];
     public const BRANDS=['SONY','LG','Samsung','Sharp','Polytron','Coocaa','Aqua','Toshiba','Panasonic','Philips'];
     public const ACCESSORIES=['Kabel Power','Remote','Adaptor / Charger','Battery','Bracket'];
-    public static function customer(array $actor): ?array { return Database::one('SELECT c.*,u.phone FROM customers c JOIN users u ON u.id=c.user_id WHERE c.user_id=?',[$actor['id']]); }
+    public static function customer(array $actor): ?array { return Database::one('SELECT c.*,u.phone FROM customers c JOIN users u ON u.id=c.user_id WHERE c.user_id=? AND c.deleted_at IS NULL',[$actor['id']]); }
+    public static function isComplete(array $order): bool { return in_array($order['status']??'',self::COMPLETED_STATUSES,true); }
     public static function get(int $id,array $actor): ?array {
         $sql='SELECT s.*,c.user_id FROM service_orders s JOIN customers c ON c.id=s.customer_id WHERE s.id=?'; $p=[$id];
-        if ($actor['role']!=='admin') { $sql.=' AND c.user_id=?'; $p[]=$actor['id']; }
+        if ($actor['role']!=='admin') { $sql.=' AND c.user_id=? AND c.deleted_at IS NULL'; $p[]=$actor['id']; }
         return Database::one($sql,$p);
     }
     private static function fields(array $d): array {
@@ -168,8 +170,9 @@ final class Orders {
     private static function adminFields(array $d,array $fields): array {
         $status=Validate::text($d,'status',40);
         if (!in_array($status,self::STATUSES,true)) throw new ValidationException('Status tidak valid.');
-        $done=Validate::date($d['completed_date']??null); $warranty=Validate::date($d['warranty_date']??null);
-        if (in_array($status,['Selesai','Sudah Diambil'],true) && !$done) throw new ValidationException('Tanggal selesai wajib untuk servis selesai/diambil.');
+        $complete=self::isComplete(['status'=>$status]);
+        $done=$complete?Validate::date($d['completed_date']??null):null; $warranty=$complete?Validate::date($d['warranty_date']??null):null;
+        if ($complete && !$done) throw new ValidationException('Tanggal selesai wajib untuk servis selesai/diambil.');
         if ($done && $done<$fields['received_date']) throw new ValidationException('Tanggal selesai tidak boleh sebelum tanggal masuk.');
         if ($warranty && (!$done || $warranty<$done)) throw new ValidationException('Garansi harus setelah atau sama dengan tanggal selesai.');
         $values=['status'=>$status,'completed_date'=>$done,'warranty_date'=>$warranty,'total_cost'=>Validate::decimal($d['total_cost']??null),'technician_notes'=>Validate::text($d,'technician_notes',4000,false)];
@@ -180,13 +183,13 @@ final class Orders {
         return $values;
     }
     public static function signatureVisible(array $order): bool {
-        return in_array($order['status'],['Selesai','Sudah Diambil'],true) && (int)($order['show_workshop_signature']??1)===1;
+        return self::isComplete($order) && (int)($order['show_workshop_signature']??1)===1;
     }
     public static function create(array $d,array $actor): int {
         if ($actor['role']!=='admin') foreach(['total_cost','status','completed_date','warranty_date','technician_notes','invoice_number','role','customer_id','show_workshop_signature'] as $key) if (array_key_exists($key,$d)) throw new ValidationException('Kolom khusus admin tidak boleh dikirim konsumen.');
         $key=Validate::key($d['submission_key']??'');
         if ($actor['role']==='admin') {
-            $customer=Database::one('SELECT c.id,c.name,c.address,u.phone FROM customers c JOIN users u ON u.id=c.user_id WHERE c.id=?',[Validate::integer($d['customer_id']??'',1)]);
+            $customer=Database::one('SELECT c.id,c.name,c.address,u.phone FROM customers c JOIN users u ON u.id=c.user_id WHERE c.id=? AND c.deleted_at IS NULL',[Validate::integer($d['customer_id']??'',1)]);
             if (!$customer) throw new ValidationException('Konsumen tidak ditemukan.');
             foreach(['customer_name'=>'name','contact_phone'=>'phone','address'=>'address'] as $field=>$source) {
                 if (!array_key_exists($field,$d) || (is_string($d[$field]) && trim($d[$field])==='')) $d[$field]=$customer[$source];
@@ -199,7 +202,8 @@ final class Orders {
         if (!$customer) throw new ValidationException('Akun konsumen tidak ditemukan.');
         return Database::tx(function() use($customer,$key,$fields) {
             // Lock pemilik juga menserialisasi retry token pengiriman untuk konsumen yang sama.
-            Database::one('SELECT id FROM customers WHERE id=? FOR UPDATE',[$customer['id']]);
+            $owner=Database::one('SELECT id,deleted_at FROM customers WHERE id=? FOR UPDATE',[$customer['id']]);
+            if (!$owner || $owner['deleted_at']!==null) throw new ValidationException('Konsumen tidak aktif.');
             $existing=Database::one('SELECT id FROM service_orders WHERE customer_id=? AND submission_key=?',[$customer['id'],$key]);
             if ($existing) return (int)$existing['id'];
             $date=Clock::today();
@@ -230,7 +234,7 @@ final class Orders {
     }
     public static function listing(array $actor,string $query='',?string $status=null,int $page=1): array {
         $where=[]; $params=[];
-        if ($actor['role']!=='admin') { $where[]='c.user_id=?'; $params[]=$actor['id']; }
+        if ($actor['role']!=='admin') { $where[]='c.user_id=? AND c.deleted_at IS NULL'; $params[]=$actor['id']; }
         if ($query!=='') {
             $search='%'.$query.'%'; $phone=$query;
             try { $phone=Validate::phone($query); } catch(ValidationException) {}
@@ -247,7 +251,7 @@ final class Customers {
         if ($id===null) return Auth::register($d);
         $name=Validate::text($d,'name',150); $phone=Validate::phone($d['phone']??''); $address=Validate::text($d,'address');
         try { Database::tx(function() use($id,$name,$phone,$address) {
-            $c=Database::one('SELECT * FROM customers WHERE id=? FOR UPDATE',[$id]);
+            $c=Database::one('SELECT * FROM customers WHERE id=? AND deleted_at IS NULL FOR UPDATE',[$id]);
             if (!$c) throw new ValidationException('Konsumen tidak ditemukan.');
             Database::query('UPDATE customers SET name=?,address=? WHERE id=?',[$name,$address,$id]);
             Database::query('UPDATE users SET phone=? WHERE id=?',[$phone,$c['user_id']]);
@@ -262,7 +266,7 @@ final class Inventory {
         try {
             if ($id) {
                 $rev=Validate::integer($d['revision']??'',1);
-                $s=Database::query('UPDATE spare_parts SET sku=?,name=?,minimum_stock=?,unit=?,purchase_price=?,sale_price=?,revision=revision+1 WHERE id=? AND revision=?',[...array_values($fields),$id,$rev]);
+                $s=Database::query('UPDATE spare_parts SET sku=?,name=?,minimum_stock=?,unit=?,purchase_price=?,sale_price=?,revision=revision+1 WHERE id=? AND revision=? AND deleted_at IS NULL',[...array_values($fields),$id,$rev]);
                 if (!$s->affected_rows) throw new ValidationException('Data sparepart berubah atau tidak ditemukan. Muat ulang halaman.');
                 return $id;
             }
@@ -275,6 +279,7 @@ final class Inventory {
         Database::tx(function() use($partId,$quantity,$reason,$key,$actor) {
             $part=Database::one('SELECT * FROM spare_parts WHERE id=? FOR UPDATE',[$partId]);
             if (!$part) throw new ValidationException('Sparepart tidak ditemukan.');
+            if ($part['deleted_at']!==null) throw new ValidationException('Pulihkan sparepart sebelum menambah stok.');
             if (Database::one('SELECT id FROM stock_movements WHERE operation_key=?',[$key])) return;
             $balance=(int)$part['stock']+$quantity;
             if ($balance>1000000000) throw new ValidationException('Stok melampaui batas.');
@@ -302,6 +307,7 @@ final class Inventory {
         if (!$part) throw new ValidationException('Sparepart tidak ditemukan.');
         $usage=Database::one('SELECT * FROM service_order_parts WHERE service_order_id=? AND spare_part_id=? FOR UPDATE',[$orderId,$partId]);
         $old=(int)($usage['quantity']??0); $delta=$old-$quantity; $balance=(int)$part['stock']+$delta;
+        if ($part['deleted_at']!==null && $delta<0) throw new ValidationException('Sparepart sudah dihapus. Pulihkan sebelum menambah penggunaan.');
         if (!$delta) return;
         if ($balance<0) throw new ValidationException('Stok tidak cukup. Tersedia '.$part['stock'].' '.$part['unit'].'.');
         if ($balance>1000000000) throw new ValidationException('Stok melampaui batas.');
