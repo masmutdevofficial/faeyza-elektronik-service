@@ -63,6 +63,14 @@ document.querySelectorAll('[data-status-filter]').forEach(select => {
     else form.submit();
   });
 });
+// Back/forward cache can restore an unsent select value over the rendered list.
+window.addEventListener('pageshow', () => {
+  const query = new URL(window.location.href).searchParams;
+  document.querySelectorAll('[data-status-filter]').forEach(select => {
+    select.value = query.get(select.name) ?? '';
+    if (select.form.elements.q) select.form.elements.q.value = query.get('q') ?? '';
+  });
+});
 const customerPicker = document.querySelector('[data-customer-picker]');
 const customerPreview = document.querySelector('[data-customer-preview]');
 if (customerPreview) {

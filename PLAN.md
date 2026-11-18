@@ -127,5 +127,5 @@ Status deployment: COMPLETE. Kedua container healthy, admin login/logout/login u
 
 - [x] Reproduksi produksi: tanpa Cari status campuran, setelah Cari hanya Selesai; terapkan auto-submit dan pertahankan konteks.
 - [x] Invoice produksi terbuka tanpa error JS; modul cetak terpisah/berversi, bantuan menu browser, tanpa mengklaim printer/HP fisik telah diuji.
-- [x] Lokal 322 native/HTTP + 12 unit JavaScript + 20 browser filter/cetak + 124 bisnis + 29 dialog + 42 PDF PASS (549). Tidak mengubah pesanan produksi.
+- [x] Lokal 322 native/HTTP + 14 unit JavaScript + 21 browser filter/cetak + 124 bisnis + 29 dialog + 42 PDF PASS (552). Tidak mengubah pesanan produksi.
 - [ ] Push main, redeploy resource Faeyza melalui Chrome profil Imam, dan verifikasi hasil produksi.

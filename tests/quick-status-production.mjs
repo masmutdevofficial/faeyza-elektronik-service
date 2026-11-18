@@ -8,7 +8,7 @@ export async function verifyLiveQuickStatus({tab,viewport,base='https://faeyza.d
   const first=tab.playwright.locator('tbody .table-primary').first();
   const invoice=await first.innerText();const href=await first.getAttribute('href');const id=new URL(href,base).searchParams.get('id');
   const currentStatus=await tab.playwright.locator('tbody tr').first().locator('.badge').innerText();
-  check('Produksi aset versi 9 dimuat',await tab.playwright.evaluate(()=>!!document.querySelector('script[src="assets/app.js?v=9"]')&&!!document.querySelector('link[href="assets/app.css?v=8"]')));
+  check('Produksi aset versi 10 dimuat',await tab.playwright.evaluate(()=>!!document.querySelector('script[src="assets/app.js?v=10"]')&&!!document.querySelector('link[href="assets/app.css?v=8"]')));
   check('Produksi setiap baris servis memiliki aksi status',await tab.playwright.locator('[data-status-open]').count()===await tab.playwright.locator('tbody tr').count());
   await tab.playwright.getByRole('link',{name:'Ubah status '+invoice,exact:true}).click();await tab.ax.get();
   check('Produksi dialog terbuka langsung dari daftar',await dialog.isVisible());

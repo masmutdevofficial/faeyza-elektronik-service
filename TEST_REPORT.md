@@ -279,20 +279,20 @@ Hasil fase redeploy: **72 PASS, 0 FAIL, 0 BLOCKED**. Total fase implementasi dan
 
 Reproduksi produksi melalui profil Imam sebelum perubahan: memilih Selesai tanpa Cari tidak mengubah URL dan masih menampilkan Menunggu Sparepart, Diterima, Selesai, Sudah Diambil. Setelah Cari, daftar hanya memuat Selesai. Bukti: invoice-filter-production-before.json. Penyebab filter adalah pilihan belum dikirim, bukan query SQL mengabaikan status.
 
-Perbaikan: select filter memakai requestSubmit pada change (fallback submit); server memvalidasi enum dan kepemilikan. Pencarian/filter/halaman disimpan pada tautan dialog status dan dipulihkan pada Batal, validasi gagal, dan redirect sukses. Invoice memuat invoice-print.js?v=1 secara mandiri, invoice.css?v=4, halaman aplikasi memakai app.js?v=9. Modul cetak memanggil window.print secara sinkron dari klik, mengenali event cetak, dan membuka bantuan jika tidak tersedia/ditolak/diabaikan. Petunjuk HTML tetap dapat dibuka tanpa skrip cetak dan disembunyikan ketika print.
+Perbaikan: select filter memakai requestSubmit pada change (fallback submit); server memvalidasi enum dan kepemilikan. Pada pemulihan Back/bfcache, nilai dropdown dan pencarian diselaraskan dengan URL hasil tanpa request tambahan. Pencarian/filter/halaman disimpan pada tautan dialog status dan dipulihkan pada Batal, validasi gagal, dan redirect sukses. Invoice memuat invoice-print.js?v=1 secara mandiri, invoice.css?v=4, halaman aplikasi memakai app.js?v=10. Modul cetak memanggil window.print secara sinkron dari klik, mengenali event cetak, dan membuka bantuan jika tidak tersedia/ditolak/diabaikan. Petunjuk HTML tetap dapat dibuka tanpa skrip cetak dan disembunyikan ketika print.
 
 Hasil lokal aktual:
 
 | Suite | Tujuan | Hasil | Bukti/perintah |
 | --- | --- | --- | --- |
 | Native/domain/HTTP | Regresi sebelumnya; tujuh filter untuk admin/pelanggan, ownership, input invalid, konteks redirect, invoice memakai modul terpisah | 322 PASS, 0 FAIL | tests/test.ps1; invoice-filter-integration-output.txt |
-| Unit JavaScript | Klik benar-benar memanggil window.print, before/afterprint, media print, API hilang/throw/silent, klik ulang; filter otomatis pada form yang tepat | 12 PASS, 0 FAIL | node tests/invoice-filter-js.mjs; invoice-filter-js-results.json |
-| Browser filter/cetak | Pilih status tanpa Cari, Semua status, empty state, filter tetap setelah update, filter Invoice/pelanggan, bantuan cetak dan viewport | 20 PASS, 0 FAIL | runInvoiceFilter; invoice-filter-browser-results.json |
+| Unit JavaScript | Klik benar-benar memanggil window.print, before/afterprint, media print, API hilang/throw/silent, klik ulang; filter otomatis pada form yang tepat dan sinkronisasi Back | 14 PASS, 0 FAIL | node tests/invoice-filter-js.mjs; invoice-filter-js-results.json |
+| Browser filter/cetak | Pilih status tanpa Cari, Semua status, Back, empty state, filter tetap setelah update, filter Invoice/pelanggan, bantuan cetak dan viewport | 21 PASS, 0 FAIL | runInvoiceFilter; invoice-filter-browser-results.json |
 | Browser bisnis | Registrasi/login, servis, stok 10→8, Rp150.000, selesai/garansi, tanda tangan, IDOR dan formulir | 124 PASS, 0 FAIL | runBrowserE2E; invoice-filter-business-results.json |
 | Browser dialog | Status/tanggal, konfirmasi pembatalan, stok 8→10, konteks URL baru, pelanggan, responsive | 29 PASS, 0 FAIL | runQuickStatus; invoice-filter-status-results.json |
 | PDF aktual | Empat dokumen A4: awal, final, teks panjang, legacy nonfinal; navigasi dan bantuan tidak tercetak | 42 PASS, 0 FAIL | tests/print.ps1; invoice-filter-print-output.txt, print-results.json |
 
-Total assertion lokal **549 PASS, 0 FAIL**. Pengujian UI lokal awal memakai in-app browser, sedangkan regresi bisnis/dialog memakai Chrome profil Imam setelah tersambung. PDF terbaru diperiksa visual sebagai PNG. Metadata PDF diambil dari pesanan yang benar-benar dirender, sehingga fixture browser lama tidak membuat pemeriksaan garansi keliru.
+Total assertion lokal **552 PASS, 0 FAIL**. Pengujian UI lokal memakai in-app browser; regresi bisnis/dialog juga telah lulus di Chrome profil Imam sebelum pengaman Back ditambahkan, lalu diulang pada in-app browser. PDF terbaru diperiksa visual sebagai PNG. Metadata PDF diambil dari pesanan yang benar-benar dirender, sehingga fixture browser lama tidak membuat pemeriksaan garansi keliru.
 
 Batas verifikasi cetak: invoice produksi benar-benar terbuka tanpa error JavaScript sebelum perbaikan. Klik Cetak aktual di in-app browser/Chrome membuat perintah Input/Runtime menunggu saat native print berjalan; dialog native tidak dapat diinspeksi tuntas melalui target halaman. Tab uji milik agen ditutup untuk pulih. Ini **bukan** bukti PASS printer fisik atau reproduksi HP Android klien. Unit membuktikan pemanggilan handler; PDF membuktikan keluaran engine cetak. Perangkat/browser HP klien belum diuji langsung, sehingga penyebab spesifik keluhan cetak HP belum dapat dipastikan.
 

@@ -9,15 +9,20 @@ export async function runInvoiceFilter({tab,viewport,fixture,filterFixture,save,
   const only=async status=>{const badges=await tab.playwright.locator('main .badge').allTextContents();return badges.length>0&&badges.every(value=>value.trim()===status);};
   const size=async width=>{await viewport.set({width,height:900});const v=await tab.playwright.evaluate(()=>({w:innerWidth,h:innerHeight}));if(v.w!==width)await viewport.set({width:Math.round(width*width/v.w),height:Math.round(900*900/v.h)});};
   try {
+    if((await tab.url())!==base+'index.php?page=orders&q=Filter+QA')await goto('orders&q=Filter+QA');
+    const initialCount=await tab.playwright.locator('main .badge').count();
     for(const status of ['Menunggu Konfirmasi','Diterima','Dalam Pengerjaan','Menunggu Sparepart','Selesai','Sudah Diambil','Dibatalkan']) {
       await select(status);check('27 pilih '+status+' langsung menyaring tanpa Cari',await only(status));
     }
-    await select('');check('27 Semua status mengembalikan delapan hasil',(await tab.playwright.locator('main .badge').count())===8);
-    await select('Diterima');await tab.playwright.locator('[data-status-open]').click();await tab.ax.get();
+    await select('');check('27 Semua status mengembalikan seluruh hasil awal',(await tab.playwright.locator('main .badge').count())===initialCount&&initialCount>=8);
+    const allUrl=await tab.url();await select('Selesai');await tab.back();await tab.playwright.waitForURL(allUrl,{waitUntil:'domcontentloaded'});await tab.ax.get();
+    check('27 Back tidak meninggalkan pilihan Selesai pada daftar Semua status',await tab.playwright.locator('main .badge').count()===initialCount&&await tab.playwright.evaluate(()=>document.querySelector('[data-status-filter]').value===''));
+    await select('Diterima');const targetInvoice=await tab.playwright.locator('tbody .table-primary').first().innerText();
+    await goto('orders&q='+encodeURIComponent(targetInvoice)+'&status=Diterima');await tab.playwright.locator('[data-status-open]').click();await tab.ax.get();
     const dialog=tab.playwright.locator('[data-status-dialog]');await dialog.locator('[name="new_status"]').selectOption('Dalam Pengerjaan');
     await tab.playwright.expectNavigation(()=>dialog.getByRole('button',{name:'Simpan status',exact:true}).click(),{waitUntil:'domcontentloaded'});
-    await tab.playwright.waitForURL(base+'index.php?'+new URLSearchParams({page:'orders',q:'Filter QA',status:'Diterima',p:'1'}),{waitUntil:'domcontentloaded'});await tab.ax.get();
-    check('27 setelah ubah status pencarian dan filter tetap aktif',await tab.playwright.evaluate(()=>document.querySelector('[name="q"]').value==='Filter QA'&&document.querySelector('[data-status-filter]').value==='Diterima'));
+    await tab.playwright.waitForURL(base+'index.php?'+new URLSearchParams({page:'orders',q:targetInvoice,status:'Diterima',p:'1'}),{waitUntil:'domcontentloaded'});await tab.ax.get();
+    check('27 setelah ubah status pencarian dan filter tetap aktif',await tab.playwright.evaluate(invoice=>document.querySelector('[name="q"]').value===invoice&&document.querySelector('[data-status-filter]').value==='Diterima',targetInvoice));
     check('27 baris yang tidak cocok hilang dan empty state tampil',await tab.playwright.locator('main .badge').count()===0&&(await tab.playwright.locator('main').innerText()).includes('Servis tidak ditemukan'));
     await goto('invoices&q=Filter+QA');await select('Selesai','invoices');check('27 filter daftar invoice juga otomatis',await only('Selesai'));
     for(const width of [375,768,1440]) {
