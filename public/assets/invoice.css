@@ -3,10 +3,11 @@
 .mdi-icon{display:inline-block;width:18px;height:18px;fill:currentColor;vertical-align:middle;flex-shrink:0;pointer-events:none}
 .button{gap:7px}
 body.invoice-body{margin:0;background:#edf0f3;color:var(--nota-ink);font:12px Arial,Helvetica,sans-serif;line-height:1.4}
-.print-toolbar{width:min(210mm,calc(100% - 32px));margin:22px auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.print-toolbar{width:min(210mm,calc(100% - 32px));margin:22px auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
 .print-toolbar>span{font-size:12px;color:#596773}
 .button{display:inline-flex;justify-content:center;align-items:center;min-height:44px;padding:11px 17px;border:1px solid #13568d;border-radius:7px;background:#13568d;color:#fff;font:600 12px Arial,sans-serif;text-decoration:none;cursor:pointer}
 .button.secondary{background:#fff;border-color:#cdd7df;color:#24465c}
+.button.danger-outline{background:#fff;border-color:#e7c5ca;color:#ad243a}
 .button:focus-visible{outline:3px solid #8cbfff;outline-offset:3px}
 .invoice-paper{width:min(210mm,calc(100% - 32px));min-height:297mm;padding:12mm 10mm;margin:0 auto 28px;background:#fff;box-shadow:0 4px 24px #23374a15;overflow-wrap:anywhere}
 .nota-header{display:grid;grid-template-columns:23% 47% 30%;align-items:center;gap:0;margin-bottom:12px}

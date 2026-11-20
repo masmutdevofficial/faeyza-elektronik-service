@@ -2,11 +2,11 @@
 declare(strict_types=1);
 $page=$_GET['page']??'dashboard';
 if (!is_string($page)) abort_page(404);
-$routes=['login','admin-login','register','logout','account','customer-password','customer-delete','customer-restore','part-delete','part-restore','dashboard','orders','invoices','service-new','service-edit','service-status','order','invoice','success','customers','customer','customer-new','customer-edit','parts','part','part-new','part-edit'];
+$routes=['login','admin-login','register','logout','account','customer-password','customer-delete','customer-restore','invoice-delete','part-delete','part-restore','dashboard','orders','invoices','service-new','service-edit','service-status','order','invoice','success','customers','customer','customer-new','customer-edit','parts','part','part-new','part-edit'];
 if (!in_array($page,$routes,true)) abort_page(404);
 $method=$_SERVER['REQUEST_METHOD'];
 if (!in_array($method,['GET','POST'],true)) { header('Allow: GET, POST'); abort_page(405); }
-$adminRoutes=['customers','customer','customer-new','customer-edit','customer-password','customer-delete','customer-restore','part-delete','part-restore','parts','part','part-new','part-edit','service-edit','service-status'];
+$adminRoutes=['customers','customer','customer-new','customer-edit','customer-password','customer-delete','customer-restore','invoice-delete','part-delete','part-restore','parts','part','part-new','part-edit','service-edit','service-status'];
 $user=current_user();
 if (!in_array($page,['login','admin-login','register'],true)) $user=require_login(in_array($page,$adminRoutes,true)?'admin-login':'login');
 if (in_array($page,$adminRoutes,true)) $user=require_admin();
@@ -61,6 +61,17 @@ if ($page==='customer-password') {
     }
     render('customer-password',compact('customer','error')); return;
 }
+if ($page==='invoice-delete') {
+    $order=Orders::get($id,$user); if (!$order) abort_page(404);
+    if ($method==='POST') {
+        try {
+            if (($_POST['confirm']??'')!=='1') throw new ValidationException('Centang konfirmasi penghapusan.');
+            RecordDeletion::purgeInvoice($id,Validate::integer($_POST['revision']??'',1),$user);
+            flash('Invoice dan data servis berhasil dihapus permanen.'); redirect('invoices');
+        } catch(ValidationException $e) { $error=$e->getMessage(); http_response_code(422); }
+    }
+    render('invoice-delete',compact('order','error')); return;
+}
 if (in_array($page,['customer-delete','customer-restore','part-delete','part-restore'],true)) {
     $kind=str_starts_with($page,'customer-')?'customer':'part'; $label=$kind==='customer'?'konsumen':'sparepart';
     $table=$kind==='customer'?'customers':'spare_parts';
@@ -70,14 +81,19 @@ if (in_array($page,['customer-delete','customer-restore','part-delete','part-res
     if ($method==='POST') {
         try {
             if (!$restore && ($_POST['confirm']??'')!=='1') throw new ValidationException('Centang konfirmasi penghapusan.');
+            if ($kind==='customer' && !$restore) {
+                RecordDeletion::purgeCustomer($id,$user);
+                flash('Akun konsumen beserta seluruh invoice dan data servis berhasil dihapus permanen.'); redirect('customers');
+            }
             RecordDeletion::change($kind,$id,!$restore,$user);
             flash(ucfirst($label).($restore?' berhasil dipulihkan.':' dihapus dari daftar aktif.'));
             if ($restore) redirect($kind,['id'=>$id]);
             redirect($kind==='customer'?'customers':'parts',['deleted'=>'1']);
         } catch(ValidationException $e) { $error=$e->getMessage(); http_response_code(422); }
     }
-    if ($record['deleted_at']!==null) redirect($kind,['id'=>$id]);
-    render('record-delete',compact('record','kind','label','error')); return;
+    if ($record['deleted_at']!==null && $kind!=='customer') redirect($kind,['id'=>$id]);
+    $invoiceCount=$kind==='customer'?(int)Database::one('SELECT COUNT(*) n FROM service_orders WHERE customer_id=?',[$id])['n']:0;
+    render('record-delete',compact('record','kind','label','error','invoiceCount')); return;
 }
 if ($page==='dashboard') {
     if ($method!=='GET') abort_page(405);

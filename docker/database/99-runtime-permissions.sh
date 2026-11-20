@@ -9,4 +9,10 @@ docker_process_sql --database=faeyza_service <<'SQL'
 INSERT IGNORE INTO schema_migrations(version) VALUES (2);
 REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'faeyza_runtime'@'%';
 GRANT SELECT, INSERT, UPDATE ON `faeyza_service`.* TO 'faeyza_runtime'@'%';
+GRANT DELETE ON `faeyza_service`.`service_order_parts` TO 'faeyza_runtime'@'%';
+GRANT DELETE ON `faeyza_service`.`service_orders` TO 'faeyza_runtime'@'%';
+GRANT DELETE ON `faeyza_service`.`record_events` TO 'faeyza_runtime'@'%';
+GRANT DELETE ON `faeyza_service`.`customers` TO 'faeyza_runtime'@'%';
+GRANT DELETE ON `faeyza_service`.`users` TO 'faeyza_runtime'@'%';
+GRANT DELETE ON `faeyza_service`.`login_limits` TO 'faeyza_runtime'@'%';
 SQL

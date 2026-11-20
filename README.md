@@ -8,7 +8,7 @@ Deployment Docker/Coolify: lihat [DEPLOYMENT.md](DEPLOYMENT.md). Database produk
 
 Tanda tangan bengkel diatur per pesanan melalui **Edit servis → Pengerjaan & biaya**. Toggle muncul untuk status **Selesai / Sudah Diambil**, default aktif. Simpan perubahan untuk menerapkannya pada invoice dan cetak. Gambar asli disimpan privat di `config/assets/faeyza-ttd.png`; konfigurasi berada pada `invoice_signature` di branding.php. File tidak disajikan langsung melalui URL publik.
 
-Pembaruan database lama: backup dahulu, gunakan akun migrasi yang memiliki CREATE/ALTER/INSERT pada database Faeyza, lalu jalankan `php bin/migrate.php --only-db=NAMA_DATABASE`. Target harus sama dengan DB_NAME. Migrasi v2 menambahkan `show_workshop_signature` (default 1); v3 menambahkan penanda penghapusan konsumen/sparepart, versi sesi pengguna, dan audit record_events; v4 menambahkan `spare_parts.part_type`. Jalankan migrasi sebelum merilis kode baru. Tidak ada penghapusan data lama. `bin/setup.php` menjalankan migrasi untuk instalasi baru maupun skema lama. Akun runtime tetap hanya SELECT/INSERT/UPDATE.
+Pembaruan database lama: backup dahulu, gunakan akun migrasi yang memiliki CREATE/ALTER/INSERT pada database Faeyza, lalu jalankan `php bin/migrate.php --only-db=NAMA_DATABASE`. Target harus sama dengan DB_NAME. Migrasi v2 menambahkan `show_workshop_signature` (default 1); v3 menambahkan penanda penghapusan konsumen/sparepart, versi sesi pengguna, dan audit record_events; v4 menambahkan `spare_parts.part_type`. Jalankan migrasi sebelum merilis kode baru. Tidak ada penghapusan data lama. `bin/setup.php` menjalankan migrasi untuk instalasi baru maupun skema lama. Akun runtime memakai SELECT/INSERT/UPDATE serta DELETE terbatas pada enam tabel untuk penghapusan permanen; lihat docs/PENGHAPUSAN-DATA.md.
 
 **Produksi aktif:** https://faeyza.dirgasatya.id — [repository privat GitHub](https://github.com/masmutdevofficial/faeyza-elektronik-service). Hasil deployment dan pemeriksaan aktual tersedia di [DEPLOYMENT_REPORT.md](DEPLOYMENT_REPORT.md). Admin produksi dibuat secara terpisah dengan persetujuan pemilik; kredensial privat tidak tersimpan dalam repository. Coolify disetel untuk deployment manual.
 
@@ -36,7 +36,7 @@ Akun contoh **khusus development** dibuat melalui seed dengan password acak. Lih
 1. Siapkan PHP 8.2+ dengan `mysqli`, `mbstring`, dan session; MySQL 8+ atau MariaDB yang mendukung InnoDB/CHECK. Aktifkan ekstensi di `php.ini`, lalu restart Apache bila diperlukan. `curl` hanya diperlukan untuk HTTP tests.
 2. Salin proyek ke `C:\xampp\htdocs\bengkel` atau direktori aplikasi terpisah.
 3. Salin `.env.example` menjadi `.env`, isi host/port/nama DB/user/password. Jangan mengganti konfigurasi lokal yang sudah berisi data pengguna.
-4. Buat database `faeyza` dengan charset utf8mb4 dan user DB melalui phpMyAdmin atau administrator database. Untuk migrasi gunakan akun dengan izin CREATE/ALTER/INDEX/REFERENCES; sesudah migrasi gunakan akun runtime dengan SELECT/INSERT/UPDATE. Aplikasi tidak menyediakan penghapusan data/histori.
+4. Buat database `faeyza` dengan charset utf8mb4 dan user DB melalui phpMyAdmin atau administrator database. Untuk migrasi gunakan akun dengan izin CREATE/ALTER/INDEX/REFERENCES; sesudah migrasi gunakan akun runtime dengan SELECT/INSERT/UPDATE dan DELETE terbatas sesuai database/runtime-delete-permissions.sql. Histori stok tetap dipertahankan meskipun invoice atau konsumen dihapus.
 5. Jalankan migrasi di terminal dengan konfigurasi akun migrasi:
 
 ```powershell
@@ -83,7 +83,7 @@ Stok awal sparepart baru 0. Catat penerimaan melalui **Catat stok masuk** (jumla
 
 Untuk koreksi jumlah tersedia, buka detail sparepart → **Sesuaikan stok**. Isi jumlah akhir yang benar dan alasan wajib; 0 berarti stok habis. Perubahan mencatat selisih/saldo/admin dalam stock_movements secara atomik, menolak form stale, dan memakai token idempoten agar retry tidak menggandakan koreksi. Pemakaian servis tetap tersimpan; pembatalan tetap mengembalikan barang yang dipakai. Tautan koreksi tersedia juga di Edit sparepart.
 
-Ringkasan dan daftar servis aktif hanya menghitung konsumen yang belum dihapus. Menghapus semua konsumen membuat seluruh kartu servis nol; pemulihan mengembalikan hitungannya. Admin tetap dapat mencari invoice historis dari menu Invoice dan membuka detailnya. Penghapusan konsumen tidak otomatis membatalkan pesanan atau memulihkan alokasi stok.
+Ringkasan dan daftar servis mengikuti data yang masih tersimpan. Hapus konsumen menghapus permanen akun, profil, seluruh invoice dan servisnya. Nomor invoice yang pernah diterbitkan tidak dipakai ulang. Data konsumen yang diarsipkan versi lama masih tersedia pada filter Dihapus sampai admin memilih Hapus permanen atau Pulihkan.
 
 Alokasi di detail servis adalah **jumlah akhir**: 2→3 mengurangi tambahan 1; 3→1 mengembalikan 2; jumlah 0 mengembalikan seluruh alokasi. Baris penggunaan tetap tersimpan dengan kuantitas 0. Pembatalan servis mengembalikan seluruh alokasi aktif dalam satu transaksi. Pembatalan ulang tidak menggandakan pengembalian. Setelah dibuka kembali, admin harus mengalokasikan ulang secara eksplisit. Tidak ada penghapusan histori. Stok berkurang ketika alokasi disimpan, bukan saat membuka halaman atau mengganti status biasa.
 
@@ -138,7 +138,7 @@ Node/Playwright hanya untuk development. Jalankan sesudah integration tests agar
 1. Siapkan PHP 8.2+, mysqli/mysqlnd, mbstring, InnoDB dan HTTPS. Buat database dan user melalui panel hosting; nama DB mungkin berprefix akun hosting.
 2. Simpan aplikasi lengkap (termasuk folder public) dan `.env` **di luar public_html**. Salin isi folder public ke public_html, lalu gunakan wrapper `deploy/shared-hosting/index.php.example` sebagai public_html/index.php. Folder public asli tetap diperlukan helper ikon/invoice; perubahan aset perlu disinkronkan ke kedua lokasi. Pada hosting yang mendukung document root khusus, arahkan langsung ke folder public sehingga tidak perlu wrapper atau salinan aset.
 3. Jangan unggah tests, artefak, data seed, file local-credentials/local-fixtures, log, sesi, runtime portable atau file administrator DB lokal. Produksi memakai konfigurasi/kredensial baru, APP_ENV=production, SESSION_SECURE=true. Jangan gunakan akun demo di production.
-4. Impor schema.sql ke DB terpilih menggunakan akun migrasi, lalu gunakan user runtime SELECT/INSERT/UPDATE. Bila CLI tidak tersedia, impor melalui panel/phpMyAdmin; jalankan create-admin.php dengan PHP CLI privat dari terminal hosting atau hubungi pengelola hosting. Jangan membuat endpoint setup/admin publik.
+4. Impor schema.sql ke DB terpilih menggunakan akun migrasi, lalu gunakan user runtime SELECT/INSERT/UPDATE dan DELETE terbatas sesuai database/runtime-delete-permissions.sql. Bila CLI tidak tersedia, impor melalui panel/phpMyAdmin; jalankan create-admin.php dengan PHP CLI privat dari terminal hosting atau hubungi pengelola hosting. Jangan membuat endpoint setup/admin publik.
 5. Set izin hanya storage/logs dan storage/sessions writable. Pastikan .env/source tidak dapat diunduh. Matikan display_errors pada konfigurasi server juga. Log aplikasi menggunakan kode insiden tanpa kredensial/input SQL.
 6. Buat admin asli, uji login/role/penerimaan/cetak menggunakan data uji baru, backup DB dan source sebelum perubahan. Jadwalkan backup dengan fasilitas hosting. Aplikasi tidak melakukan deployment publik otomatis.
 
@@ -185,11 +185,11 @@ Uji tambahan: `node tests/invoice-filter-js.mjs`, `runInvoiceFilter` dari tests/
 
 ## Hapus dan pulihkan data
 
-Admin membuka **Konsumen/Sparepart → detail → Hapus**, mencentang konfirmasi, lalu menekan tombol Hapus. Data hilang dari daftar aktif dan muncul pada filter **Dihapus**. Buka detail data tersebut lalu **Pulihkan** untuk mengaktifkannya kembali. Penghapusan/pemulihan dicatat di record_events beserta operator dan waktu.
+Admin membuka **Konsumen → detail → Hapus konsumen**, lalu mengonfirmasi penghapusan permanen akun, profil, seluruh invoice, servis dan alokasinya. Akun tidak dapat login, sesi lama tidak berlaku, dan data tidak dapat dipulihkan. Data arsip versi lama juga mempunyai tombol Hapus permanen. Lihat [aturan dan izin database](docs/PENGHAPUSAN-DATA.md).
 
-Penghapusan bersifat dapat dipulihkan, tanpa menghapus akun/relasi/invoice/pergerakan stok. Nomor HP dan SKU tetap unik/reservasi untuk data yang sama. Konsumen yang dihapus tidak bisa login atau mengajukan servis; semua sesi lamanya dicabut, termasuk setelah pemulihan. Admin tetap dapat membaca invoice historis.
+Tombol **Hapus invoice** tersedia untuk admin pada nota dan daftar Invoice, termasuk invoice lama. Invoice dan servis merupakan satu transaksi sehingga keduanya dihapus bersama; akun konsumen dan invoice lain tetap ada. Alokasi servis belum selesai dikembalikan ke stok. Pemakaian servis Selesai/Sudah Diambil tetap mengurangi stok; histori stok dipertahankan tanpa referensi invoice. Nomor urut invoice tidak direset.
 
-Stok sparepart yang dihapus tetap tersimpan. Stok masuk dan penambahan penggunaan ditolak sampai dipulihkan. Pengurangan penggunaan atau pembatalan servis tetap mengembalikan stok dengan audit normal. Penghapusan sendiri tidak mengubah stok maupun mencatat pergerakan palsu.
+Penghapusan **sparepart** tetap dapat dipulihkan melalui filter Dihapus dan dicatat di record_events. Stok sparepart yang dihapus tetap tersimpan. Stok masuk dan penambahan penggunaan ditolak sampai dipulihkan. Pengurangan penggunaan atau pembatalan servis tetap mengembalikan stok dengan audit normal. Penghapusan sendiri tidak mengubah stok maupun mencatat pergerakan palsu.
 
 ## Pesanan dari detail konsumen
 

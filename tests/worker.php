@@ -16,6 +16,16 @@ try {
         RecordDeletion::change('part',(int)$part,true,$actor); echo json_encode(['ok'=>true]);
     } elseif($mode==='receive-part') {
         Inventory::receive((int)$part,(int)$target,'Penerimaan race',token(),$actor); echo json_encode(['ok'=>true]);
+    } elseif($mode==='purge-invoice') {
+        RecordDeletion::purgeInvoice((int)$order,(int)$target,$actor); echo json_encode(['ok'=>true]);
+    } elseif($mode==='purge-customer') {
+        RecordDeletion::purgeCustomer((int)$target,$actor); echo json_encode(['ok'=>true]);
+    } elseif($mode==='create-order') {
+        $owner=Database::one('SELECT * FROM users WHERE id=?',[(int)$target]);
+        if (!$owner) throw new ValidationException('Konsumen tidak ditemukan.');
+        $customer=Orders::customer($owner);
+        $data=['submission_key'=>token(),'received_date'=>Clock::today(),'customer_name'=>'Race deletion','contact_phone'=>$customer['phone']??'081299900001','address'=>'QA','item_name'=>'TV','brand'=>'SONY','model'=>'QA','complaint'=>'QA','location'=>'Bengkel','customer_id'=>$customer['id']??0,'status'=>'Diterima'];
+        $id=Orders::create($data,$actor); echo json_encode(['ok'=>true,'id'=>$id]);
     } elseif($mode==='receive-typed') {
         $receipt=json_decode($target,true,512,JSON_THROW_ON_ERROR);
         Inventory::receive((int)$part,(int)$receipt['quantity'],$receipt['type'],$receipt['key'],$actor,$receipt['type']); echo json_encode(['ok'=>true]);

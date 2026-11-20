@@ -4,6 +4,7 @@ declare(strict_types=1);
 putenv('APP_ENV=testing'); require dirname(__DIR__).'/app/bootstrap.php';
 if(!str_ends_with((string)getenv('DB_NAME'),'_test'))exit(1);
 $admin=Database::one("SELECT * FROM users WHERE role='admin' LIMIT 1");
+$user=$admin;
 $browser=is_file(__DIR__.'/local-browser-fixtures.json')?json_decode(file_get_contents(__DIR__.'/local-browser-fixtures.json'),true):[];
 $final=Orders::get((int)($browser['orderId']??0),$admin);
 // Tes penghapusan dapat membatalkan pesanan browser setelah simulasi selesai.

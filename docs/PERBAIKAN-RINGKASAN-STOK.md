@@ -1,5 +1,7 @@
 # Perbaikan ringkasan konsumen dan koreksi stok
 
+Catatan versi: panduan ini menjelaskan patch lama sebelum fitur hapus permanen. Pada source terbaru, hapus konsumen membersihkan akun dan seluruh invoice/servis; lihat PENGHAPUSAN-DATA.md. Jangan memakai aturan pemulihan konsumen di bawah untuk penghapusan baru.
+
 Pembaruan 20 November 2026 untuk Faeyza Elektronik Service. Memerlukan instalasi aplikasi yang sudah berjalan pada PHP 8.2 atau lebih baru. Tidak memerlukan perubahan skema database, impor SQL, pembuatan akun baru atau reset data.
 
 ## Perubahan

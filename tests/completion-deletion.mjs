@@ -25,14 +25,6 @@ export async function runCompletionDeletion({tab,viewport,fixture,business,save,
   await goto('customer&id='+business.customerId);await link('Hapus konsumen');
   await responsive('customer-delete&id='+business.customerId,'delete-customer-confirm');
   check('23 konfirmasi hapus konsumen tampil',await tab.playwright.getByRole('checkbox',{name:'Saya ingin menghapus konsumen ini.',exact:true}).count()===1);
-  await tab.playwright.getByRole('checkbox',{name:'Saya ingin menghapus konsumen ini.',exact:true}).check();await click('Hapus konsumen');
-  check('23 penghapusan menuju daftar Dihapus',(await tab.url()).includes('deleted=1'));
-  await goto('customer&id='+business.customerId);
-  await responsive('customer&id='+business.customerId,'deleted-customer');
-  check('23 konsumen dihapus dapat dipulihkan dan tanpa servis baru',await tab.playwright.getByRole('button',{name:'Pulihkan',exact:true}).isVisible()&&await tab.playwright.getByRole('link',{name:'Servis baru',exact:true}).count()===0);
-  await save('deleted-customer-desktop.png');
-  await goto('invoice&id='+business.orderId);check('23 admin tetap dapat membaca invoice konsumen dihapus',(await tab.playwright.locator('main, .invoice-paper').first().innerText()).includes(business.invoice));
-  await goto('customer&id='+business.customerId);await click('Pulihkan');check('23 konsumen pulih kembali memiliki servis baru',await tab.playwright.getByRole('link',{name:'Servis baru',exact:true}).count()===1);
   await goto('part&id='+business.partId);await link('Hapus sparepart');
   await responsive('part-delete&id='+business.partId,'delete-part-confirm');
   await tab.playwright.getByRole('checkbox',{name:'Saya ingin menghapus sparepart ini.',exact:true}).check();await click('Hapus sparepart');
@@ -45,5 +37,10 @@ export async function runCompletionDeletion({tab,viewport,fixture,business,save,
   await tab.playwright.locator('[name="phone"]').fill(business.customerPhone);await tab.playwright.locator('[name="password"]').fill(fixture.password);await click('Masuk');await tab.playwright.waitForURL(base+'index.php?page=dashboard',{waitUntil:'domcontentloaded'});
   await goto('order&id='+business.orderId);check('22 pelanggan melihat status batal tanpa tanggal selesai/garansi',(await tab.playwright.locator('.badge').innerText())==='Dibatalkan'&&await tab.playwright.evaluate(()=>[...document.querySelectorAll('.summary-panel .detail-list dd')].every(dd=>dd.textContent.trim()==='-')));
   await goto('customer-delete&id='+business.customerId);check('23 halaman penghapusan tetap ditolak untuk pelanggan',(await tab.playwright.locator('main').innerText()).includes('403'));
+  await click('Keluar');await goto('admin-login');await tab.playwright.locator('[name="phone"]').fill(fixture.admin_phone);await tab.playwright.locator('[name="password"]').fill(fixture.password);await click('Masuk');
+  await goto('customer-delete&id='+business.customerId);await tab.playwright.locator('[name="confirm"]').check();await click('Hapus konsumen');
+  check('33 hapus permanen menuju daftar konsumen aktif',!(await tab.url()).includes('deleted=1'));
+  await goto('customer&id='+business.customerId);check('33 profil konsumen terhapus tidak dapat dipulihkan',(await tab.playwright.locator('main').innerText()).includes('404'));
+  await goto('invoice&id='+business.orderId);check('33 invoice konsumen ikut terhapus',(await tab.playwright.locator('main').innerText()).includes('404'));
   return results;
 }

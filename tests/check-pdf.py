@@ -13,7 +13,7 @@ for name in ('invoice-initial', 'invoice-final', 'invoice-long', 'invoice-pendin
     text = '\n'.join(p.extract_text() or '' for p in doc.pages)
     checks = {
         f'10 {name} ukuran A4': all(abs(float(p.mediabox.width) - 595.28) < 2 and abs(float(p.mediabox.height) - 841.89) < 2 for p in doc.pages),
-        f'10 {name} navigasi dan tombol disembunyikan': all(label not in text for label in ('Cetak invoice', 'Detail servis', 'Workspace', 'Cetak lewat menu browser')),
+        f'10 {name} navigasi dan tombol disembunyikan': all(label not in text for label in ('Cetak invoice', 'Hapus invoice', 'Detail servis', 'Workspace', 'Cetak lewat menu browser')),
         f'10 {name} konten identitas dan footer utuh': 'Faeyza Elektronik Service' in text and 'Dokumen ini diterbitkan' in text,
         f'15 {name} website bengkel tercetak': 'www.faeyzateknik.com' in text,
         f'10 {name} logo asli tertanam': any(len(page.images) > 0 for page in doc.pages),

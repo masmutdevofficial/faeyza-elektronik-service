@@ -57,9 +57,9 @@ try {
   check('30 hapus konsumen mengurangi total servis dan kelompok',before['Total servis']-after['Total servis']===8&&before['Dalam proses']-after['Dalam proses']===4&&before.Selesai-after.Selesai===2);
   check('30 servis terbaru tidak memuat konsumen dihapus',!(await page.locator('main').innerText()).includes('Ringkasan Hapus QA')&&!(await page.locator('main').innerText()).includes('Koreksi stok QA'));
   await goto('orders&q=Ringkasan+Hapus+QA');check('30 daftar servis aktif tidak menampilkan riwayat konsumen dihapus',(await page.locator('main').innerText()).includes('Servis tidak ditemukan'));
-  await goto('invoices&q=Ringkasan+Hapus+QA');check('30 invoice historis tetap tersedia',await page.locator('main .badge').count()===7);
-  await goto('invoice&id='+fix.orders.Selesai);check('30 invoice konsumen dihapus tetap dapat dicetak admin',await page.getByRole('button',{name:'Cetak invoice',exact:true}).isEnabled());
-  await goto('customer&id='+fix.customer_id);await click('Pulihkan');await goto('dashboard');check('30 pemulihan mengembalikan angka semula',JSON.stringify(await cards())===JSON.stringify(before));
+  await goto('invoices&q=Ringkasan+Hapus+QA');check('33 invoice konsumen dihapus permanen hilang dari pencarian',(await page.locator('main').innerText()).includes('Servis tidak ditemukan'));
+  await goto('invoice&id='+fix.orders.Selesai);check('33 URL invoice konsumen dihapus tidak dapat dibuka',(await page.locator('main').innerText()).includes('404'));
+  await goto('customer&id='+fix.customer_id);check('33 URL konsumen dihapus tidak dapat dipulihkan',(await page.locator('main').innerText()).includes('404'));
   for(const width of [375,768,1440]) {await viewport.set({width,height:900});await goto('dashboard');check('30 ringkasan '+width+'px tanpa overflow',await page.evaluate(w=>innerWidth===w&&document.documentElement.scrollWidth<=w,width));}
   check('30/31 tanpa runtime error JavaScript',errors.length===0);await write('summary-stock-browser-results.json',results);
   business=await runBrowserE2E({tab,viewport,fixture,save:name=>save('summary-stock-regression-'+name)});await write('summary-stock-business-results.json',business);console.log('PASS regression business '+business.results.length);

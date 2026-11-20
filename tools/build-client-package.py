@@ -24,7 +24,7 @@ def build(release_date='2026-11-20'):
         files['bin/' + name] = (ROOT / 'bin' / name).read_bytes()
     for name in ['.env.example', '.htaccess']:
         files[name] = (ROOT / name).read_bytes()
-    for name in ['PANDUAN-INSTALASI.md', 'HASIL-VERIFIKASI.md', 'PANDUAN-SUBDOMAIN.md', 'PERBAIKAN-RINGKASAN-STOK.md', 'TIPE-SPAREPART.md']:
+    for name in ['PANDUAN-INSTALASI.md', 'HASIL-VERIFIKASI.md', 'PANDUAN-SUBDOMAIN.md', 'PERBAIKAN-RINGKASAN-STOK.md', 'TIPE-SPAREPART.md', 'PENGHAPUSAN-DATA.md']:
         path = ROOT / 'docs' / name
         if path.is_file(): files['docs/' + name] = path.read_bytes()
     files['PANDUAN-INSTALASI.pdf'] = (OUT / 'PANDUAN-INSTALASI.pdf').read_bytes()
@@ -58,7 +58,7 @@ def build(release_date='2026-11-20'):
     source = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
     manifest = {'application': 'Faeyza Elektronik Service', 'release_date': release_date,
                 'source_base_commit': source,
-                'note': 'Includes active customer summaries, audited stock adjustments, and sparepart types (schema v4). File hashes identify exact contents; source_base_commit identifies HEAD at packaging time and may precede uncommitted workspace changes. No database backup.',
+                'note': 'Includes active customer summaries, audited stock adjustments, sparepart types (schema v4), and permanent customer/invoice deletion (scoped runtime DELETE grants). File hashes identify exact contents; source_base_commit identifies HEAD at packaging time and may precede uncommitted workspace changes. No database backup.',
                 'files': {name: hashlib.sha256(data).hexdigest() for name, data in sorted(files.items())}}
     files['MANIFEST.json'] = json.dumps(manifest, indent=2, ensure_ascii=False).encode('utf-8')
     zip_path = OUT / 'faeyza-elektronik-service.zip'

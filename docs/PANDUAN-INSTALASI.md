@@ -69,7 +69,7 @@ Lakukan simulasi berikut pada instalasi lokal baru:
 
 Dalam proses menggabungkan Menunggu Konfirmasi, Diterima, Dalam Pengerjaan, dan Menunggu Sparepart. Ringkasan Selesai menggabungkan Selesai dan Sudah Diambil. Dibatalkan tidak masuk kedua kelompok, tetapi tetap termasuk Total servis. Klik kartu untuk membuka daftar kelompok yang sama.
 
-Tanggal selesai dan garansi hanya dapat diisi untuk Selesai atau Sudah Diambil. Biaya kosong ditampilkan `-`, biaya nol `Rp0`. Penggunaan sparepart diubah dengan jumlah akhir: 2 menjadi 3 hanya mengurangi 1 lagi. Pembatalan servis mengembalikan alokasi stok. Hapus konsumen/sparepart dapat dipulihkan melalui filter Dihapus; riwayat tetap tersimpan.
+Tanggal selesai dan garansi hanya dapat diisi untuk Selesai atau Sudah Diambil. Biaya kosong ditampilkan `-`, biaya nol `Rp0`. Penggunaan sparepart diubah dengan jumlah akhir: 2 menjadi 3 hanya mengurangi 1 lagi. Pembatalan servis mengembalikan alokasi stok. Hapus konsumen bersifat permanen dan menghapus akun beserta seluruh invoice/servisnya. Hapus invoice tersedia khusus admin. Hapus sparepart tetap dapat dipulihkan dari filter Dihapus. Aturan stok dan izin database ada di PENGHAPUSAN-DATA.md.
 
 ## 3 Deployment hosting dengan document root khusus
 
@@ -102,7 +102,7 @@ php bin/doctor.php
 php bin/create-admin.php 08xxxxxxxxxx
 ```
 
-Sesuaikan `php` dengan executable PHP 8.2+ milik hosting. User migrasi memerlukan izin CREATE, ALTER, INDEX, REFERENCES, SELECT dan INSERT. Setelah setup, gunakan akun runtime dengan SELECT, INSERT dan UPDATE hanya pada database Faeyza. Panel tertentu hanya menyediakan pilihan ALL PRIVILEGES; mintalah pengelola membatasi akun runtime bila tersedia. Jangan memberikan izin ke seluruh database server.
+Sesuaikan `php` dengan executable PHP 8.2+ milik hosting. User migrasi memerlukan izin CREATE, ALTER, INDEX, REFERENCES, SELECT dan INSERT. Setelah setup, gunakan akun runtime dengan SELECT, INSERT dan UPDATE hanya pada database Faeyza, serta DELETE terbatas pada enam tabel sesuai PENGHAPUSAN-DATA.md. Panel tertentu hanya menyediakan pilihan ALL PRIVILEGES; mintalah pengelola membatasi akun runtime bila tersedia. Jangan memberikan izin ke seluruh database server.
 
 Direktori umum dapat memakai izin 755 dan file 644, disesuaikan kepemilikan hosting. `.env` sebaiknya 600 jika PHP tetap dapat membacanya. Hanya `storage/logs` dan `storage/sessions` yang perlu dapat ditulis PHP; gunakan 775 bila grup hosting memang memerlukannya. Hindari 777. Aktifkan HTTPS sebelum login dengan SESSION_SECURE=true. Atur display_errors=Off pada konfigurasi PHP hosting.
 

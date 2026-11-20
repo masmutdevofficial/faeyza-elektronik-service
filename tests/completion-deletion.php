@@ -32,10 +32,11 @@ check($confirmPage['code']===200&&str_contains($confirmPage['body'],'name="confi
 $deleteData=['csrf'=>$deletionHttp->form('customer-delete',['id'=>$archiveCid]),'confirm'=>'1'];
 check($deletionHttp->request('customer-delete','POST',array_replace($deleteData,['csrf'=>'invalid']),['id'=>$archiveCid])['code']===419,'23 hapus tanpa CSRF ditolak');
 check($deletionHttp->request('customer-delete','POST',['csrf'=>$deleteData['csrf']],['id'=>$archiveCid])['code']===422,'23 hapus tanpa konfirmasi ditolak');
-$deletedResponse=$deletionHttp->request('customer-delete','POST',$deleteData,['id'=>$archiveCid]);
+// Simulate a customer archived by an older release; the current delete endpoint purges permanently.
+RecordDeletion::change('customer',$archiveCid,true,$admin);
 $archivedCustomer=Database::one('SELECT * FROM customers WHERE id=?',[$archiveCid]);
-check($deletedResponse['code']===303&&$archivedCustomer['deleted_at']!==null&&(int)$archivedCustomer['deleted_by']===(int)$admin['id'],'23 hapus konsumen mencatat waktu dan admin');
-check(Orders::get($archiveOrder,$admin)['invoice_number']===$archiveInvoice&&Database::one('SELECT id FROM users WHERE id=?',[$archiveUid])!==null,'23 hapus konsumen mempertahankan akun relasi dan invoice');
+check($archivedCustomer['deleted_at']!==null&&(int)$archivedCustomer['deleted_by']===(int)$admin['id'],'23 arsip konsumen versi lama menyimpan waktu dan admin');
+check(Orders::get($archiveOrder,$admin)['invoice_number']===$archiveInvoice&&Database::one('SELECT id FROM users WHERE id=?',[$archiveUid])!==null,'23 arsip versi lama mempertahankan relasi untuk pengujian upgrade');
 check($oldCustomerSession->request('account')['code']===303&&Orders::get($archiveOrder,$archiveActor)===null,'23 konsumen dihapus kehilangan sesi dan akses invoice');
 rejects(fn()=>Auth::login('081234599988',$password,'archive-login-test'),'23 login konsumen dihapus ditolak');
 rejects(fn()=>Orders::create(fixture(['customer_id'=>$archiveCid,'status'=>'Diterima']),$admin),'23 servis baru untuk konsumen dihapus ditolak');

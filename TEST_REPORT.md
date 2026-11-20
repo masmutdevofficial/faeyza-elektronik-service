@@ -1,5 +1,27 @@
 # Laporan Pengujian — Faeyza Elektronik Service
 
+## Hapus permanen akun dan invoice — 20 November 2026
+
+Hapus konsumen sekarang menghapus permanen users/customers, semua service_orders (invoice dan snapshot kontak/perangkat), service_order_parts, record_events profil dan bucket login nomor. Sesi lama langsung tidak berlaku. Hapus invoice hanya untuk admin pada nota/daftar Invoice dan juga menghapus data servis terkait, tanpa menghapus akun atau invoice lain. Fitur berlaku untuk baris lama maupun baru; konsumen arsip versi lama memiliki aksi Hapus permanen. Tidak ada auto-purge saat upgrade.
+
+Penghapusan memakai transaksi dan row lock. Nonfinal mengembalikan alokasi aktif; Selesai/Sudah Diambil mempertahankan pemakaian. Histori stock_movements tetap tersimpan dengan service_order_id NULL dan tanpa snapshot identitas pelanggan. Invoice sequences tidak direset. CSRF, konfirmasi dan revision pada hapus invoice mencegah request tanpa token atau formulir stale. Kegagalan izin/relasi membatalkan seluruh perubahan dan menghasilkan pesan admin yang aman.
+
+| Suite | Bukti/perintah aktual dan cakupan | Hasil |
+| --- | --- | --- |
+| Native/domain/HTTP | `tests/test.ps1 -Php C:\project\bengkel-runtime\php\php.exe`; purge-integration-output.txt dan integration-results.json; termasuk 55 pemeriksaan baru tentang akun aktif/arsip, invoice lama/baru, role/CSRF/stale, pembersihan anak, sesi, re-registrasi, rollback FK, dan race hapus/alokasi/submit | 490 PASS, 0 FAIL |
+| Akun DB terbatas | `php tests/delete-runtime-permissions.php PATH_KONFIG_ADMIN_LOKAL_PRIVAT`; purge-permissions-output.txt dan purge-permissions-results.json; akun DB sementara hanya pada faeyza_test, gagal sebelum grant, rollback utuh, berhasil setelah script grant enam tabel, DELETE ledger/sequence ditolak | 7 PASS, 0 FAIL |
+| Browser regresi | `node tests/summary-stock-ui.mjs`; purge-regression-output.txt dan summary-stock-*-results.json; 28 ringkasan/stok termasuk hapus permanen, 124 bisnis, 29 status cepat, 21 filter | 202 PASS, 0 FAIL |
+| Browser penghapusan | `node tests/permanent-deletion-ui.mjs`; purge-browser-output.txt, purge-browser-results.json; akses pelanggan ditolak, nota/konfirmasi/daftar, data lama/baru/arsip, pending stok 5→7, final tetap 7, sesi dicabut dan data lain utuh | 30 PASS, 0 FAIL |
+| Browser tipe sparepart | `node tests/part-type-ui.mjs`; purge-part-type-output.txt, part-type-browser-results.json | 21 PASS, 0 FAIL |
+| Unit JavaScript | `node tests/invoice-filter-js.mjs`; purge-js-output.txt | 14 PASS, 0 FAIL |
+| Cetak browser PDF | `tests/print.ps1` memakai PHP portable dan Python QA; purge-print-output.txt, print-results.json; 4 dokumen A4 termasuk teks panjang dan nonfinal, label Hapus invoice tidak tercetak | 42 PASS, 0 FAIL |
+
+Total **806 PASS, 0 FAIL, 0 BLOCKED** pada pengujian fitur lokal. Seluruh 60 file PHP lulus lint pada pemeriksaan akhir. Browser headless memakai profil sementara, tidak mengendalikan komputer klien atau sesi Chrome pengguna. Nota, konfirmasi invoice dan konfirmasi konsumen diuji 375/768/1440px; purge-invoice-mobile.jpg dan purge-invoice-confirm-mobile.jpg diperiksa visual. Log PHP QA tidak memuat warning/fatal. Akun database QA sementara dihapus setelah tes. Nilai rahasia tidak dicetak atau disimpan dalam source.
+
+Regresi arsip lama tetap diuji dengan fixture yang secara eksplisit mensimulasikan versi lama; endpoint hapus konsumen sekarang diuji sebagai hapus permanen. Ekspektasi browser diperbarui dari pemulihan/invoice historis menjadi 404 setelah purge. Renderer PDF memakai konteks admin agar toolbar hapus ikut diuji sebagai elemen yang disembunyikan saat print. Tidak ditemukan kegagalan aplikasi pada hasil akhir.
+
+Penerapan produksi **belum dilakukan**. Volume lama perlu grant DELETE enam tabel melalui database/runtime-delete-permissions.sql dengan administrator database Faeyza sebelum redeploy. Tidak ada perubahan skema tambahan untuk fitur hapus; migrasi v4 dari fitur tipe tetap diperlukan jika belum diterapkan. Tidak ada penghapusan data nyata, pemasangan ZIP baru, atau uji langsung Apache/XAMPP/panel hosting/HP Android pada fase ini. Panduan: docs/PENGHAPUSAN-DATA.md dan DEPLOYMENT.md.
+
 ## Tipe sparepart — 20 November 2026
 
 Implementasi lokal selesai dan siap dipush ke main. Catat stok masuk memakai input Tipe sparepart; nilainya disimpan pada sparepart dan ditampilkan di detail/tambah/edit serta pencarian. Edit tipe tidak mengubah jumlah stok. Penerimaan menyimpan tipe dan stok secara atomik, mencatat snapshot tipe pada histori, dan menolak retry dengan payload berbeda. Retry lama tidak menimpa tipe hasil edit berikutnya. Form lama yang masih mengirim keterangan sumber tetap diterima tanpa mengubah tipe.

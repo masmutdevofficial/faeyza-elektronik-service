@@ -167,3 +167,15 @@ Status deployment: COMPLETE. Kedua container healthy, admin login/logout/login u
 - [x] UI detail/edit diuji 375/768/1440px; screenshot mobile diperiksa, tidak ada overflow atau error JavaScript.
 - [x] Panduan migrasi CLI/phpMyAdmin dan deployment diperbarui; panduan tipe disertakan oleh pembuat ZIP.
 - [ ] Migrasi v4 dan deployment produksi belum dijalankan pada fase ini. Permintaan saat ini adalah push source ke main.
+
+## Penghapusan permanen konsumen dan invoice
+
+- [x] Hapus konsumen membersihkan akun/profil, semua servis/invoice, alokasi, audit arsip profil dan bucket login nomor; sesi lama ditolak.
+- [x] Hapus invoice khusus admin pada nota dan daftar, berlaku pada data lama/baru, dengan konfirmasi, CSRF dan revision.
+- [x] Data arsip konsumen versi lama dapat dihapus permanen tanpa auto-purge ketika upgrade.
+- [x] Alokasi nonfinal dikembalikan; pemakaian Selesai/Sudah Diambil tetap mengurangi stok. Ledger anonim dan invoice_sequences dipertahankan.
+- [x] Transaksi, rollback, role/IDOR, stok, invoice berulang dan race submit/alokasi/hapus diuji pada database _test.
+- [x] Grant DELETE hanya enam tabel; runtime tetap tidak dapat DELETE stock_movements/invoice_sequences; script izin diuji pada akun sementara lokal.
+- [x] 490 native + 7 izin runtime + 202 browser regresi + 30 browser penghapusan + 21 browser tipe + 14 JS + 42 PDF PASS (806).
+- [x] Screenshot nota/konfirmasi mobile diperiksa; detail invoice/konfirmasi diuji 375/768/1440px. Panduan hosting dan aturan stok diperbarui.
+- [ ] Izin DELETE dan redeploy produksi belum diterapkan; tidak ada data produksi yang dihapus.
