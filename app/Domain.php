@@ -295,28 +295,34 @@ final class Customers {
 final class Inventory {
     public static function save(?int $id,array $d,array $actor): int {
         Auth::admin($actor);
-        $fields=['sku'=>Validate::text($d,'sku',60),'name'=>Validate::text($d,'name',150),'minimum_stock'=>Validate::integer($d['minimum_stock']??''),'unit'=>Validate::text($d,'unit',30),'purchase_price'=>Validate::decimal($d['purchase_price']??null),'sale_price'=>Validate::decimal($d['sale_price']??null)];
+        $fields=['sku'=>Validate::text($d,'sku',60),'name'=>Validate::text($d,'name',150),'part_type'=>array_key_exists('part_type',$d)?Validate::text($d,'part_type',180,false):null,'minimum_stock'=>Validate::integer($d['minimum_stock']??''),'unit'=>Validate::text($d,'unit',30),'purchase_price'=>Validate::decimal($d['purchase_price']??null),'sale_price'=>Validate::decimal($d['sale_price']??null)];
         try {
             if ($id) {
                 $rev=Validate::integer($d['revision']??'',1);
-                $s=Database::query('UPDATE spare_parts SET sku=?,name=?,minimum_stock=?,unit=?,purchase_price=?,sale_price=?,revision=revision+1 WHERE id=? AND revision=? AND deleted_at IS NULL',[...array_values($fields),$id,$rev]);
+                $s=Database::query('UPDATE spare_parts SET sku=?,name=?,part_type=COALESCE(?,part_type),minimum_stock=?,unit=?,purchase_price=?,sale_price=?,revision=revision+1 WHERE id=? AND revision=? AND deleted_at IS NULL',[...array_values($fields),$id,$rev]);
                 if (!$s->affected_rows) throw new ValidationException('Data sparepart berubah atau tidak ditemukan. Muat ulang halaman.');
                 return $id;
             }
-            Database::query('INSERT INTO spare_parts(sku,name,minimum_stock,unit,purchase_price,sale_price) VALUES (?,?,?,?,?,?)',array_values($fields));
+            $fields['part_type']??='';
+            Database::query('INSERT INTO spare_parts(sku,name,part_type,minimum_stock,unit,purchase_price,sale_price) VALUES (?,?,?,?,?,?,?)',array_values($fields));
             return Database::id();
         } catch(mysqli_sql_exception $e) { if ($e->getCode()===1062) throw new ValidationException('SKU sudah digunakan. Gunakan kode unik.'); throw $e; }
     }
-    public static function receive(int $partId,int $quantity,string $reason,string $key,array $actor): void {
+    public static function receive(int $partId,int $quantity,string $reason,string $key,array $actor,?string $partType=null): void {
         Auth::admin($actor); Validate::integer($quantity,1); Validate::key($key); $reason=Validate::text(['reason'=>$reason],'reason',180);
-        Database::tx(function() use($partId,$quantity,$reason,$key,$actor) {
+        if ($partType!==null) { $partType=Validate::text(['tipe sparepart'=>$partType],'tipe sparepart',180); $reason='Tipe sparepart: '.$partType; }
+        Database::tx(function() use($partId,$quantity,$reason,$key,$actor,$partType) {
             $part=Database::one('SELECT * FROM spare_parts WHERE id=? FOR UPDATE',[$partId]);
             if (!$part) throw new ValidationException('Sparepart tidak ditemukan.');
             if ($part['deleted_at']!==null) throw new ValidationException('Pulihkan sparepart sebelum menambah stok.');
-            if (Database::one('SELECT id FROM stock_movements WHERE operation_key=?',[$key])) return;
+            $previous=Database::one('SELECT * FROM stock_movements WHERE operation_key=?',[$key]);
+            if ($previous) {
+                if ($partType!==null && ((int)$previous['spare_part_id']!==$partId || (int)$previous['actor_id']!==(int)$actor['id'] || (int)$previous['delta']!==$quantity || $previous['service_order_id']!==null || $previous['reason']!=='Stok masuk: '.$reason)) throw new ValidationException('Permintaan stok masuk tidak sesuai. Muat ulang halaman.');
+                return;
+            }
             $balance=(int)$part['stock']+$quantity;
             if ($balance>1000000000) throw new ValidationException('Stok melampaui batas.');
-            Database::query('UPDATE spare_parts SET stock=?,revision=revision+1 WHERE id=?',[$balance,$partId]);
+            Database::query('UPDATE spare_parts SET stock=?,part_type=COALESCE(?,part_type),revision=revision+1 WHERE id=?',[$balance,$partType,$partId]);
             Database::query('INSERT INTO stock_movements(spare_part_id,actor_id,delta,balance_after,reason,operation_key) VALUES (?,?,?,?,?,?)',[$partId,$actor['id'],$quantity,$balance,'Stok masuk: '.$reason,$key]);
         });
     }

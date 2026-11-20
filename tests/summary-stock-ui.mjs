@@ -41,7 +41,7 @@ try {
   check('31 tautan edit mengarah ke form penyesuaian',await page.locator('#stock-adjustment').isVisible());
   await page.locator('[name="stock_quantity"]').fill('1');await page.locator('[name="stock_reason"]').fill('');await page.getByRole('button',{name:'Simpan penyesuaian stok',exact:true}).click();
   check('31 alasan wajib mencegah submit kosong',await page.locator('[name="stock_reason"]').evaluate(node=>!node.validity.valid)&&await balance()===0);
-  const peer=await context.newPage();await peer.goto(base+'index.php?page=part&id='+fix.part);await peer.locator('[name="quantity"]').fill('5');await peer.locator('[name="reason"]').fill('Penerimaan saat form lain terbuka');await Promise.all([peer.waitForNavigation(),peer.getByRole('button',{name:'Tambah stok',exact:true}).click()]);
+  const peer=await context.newPage();await peer.goto(base+'index.php?page=part&id='+fix.part);await peer.locator('[name="quantity"]').fill('5');await peer.locator('[name="part_type"]').fill('TPA3116D2');await Promise.all([peer.waitForNavigation(),peer.getByRole('button',{name:'Tambah stok',exact:true}).click()]);
   await page.locator('[name="stock_quantity"]').fill('0');await page.locator('[name="stock_reason"]').fill('Koreksi formulir lama');await click('Simpan penyesuaian stok');
   check('31 perubahan stale ditolak dengan stok baru tetap 5',await balance()===5&&(await page.locator('main').innerText()).includes('sudah berubah'));
   check('31 kegagalan mempertahankan jumlah dan alasan',await page.locator('[name="stock_quantity"]').inputValue()==='0'&&await page.locator('[name="stock_reason"]').inputValue()==='Koreksi formulir lama');

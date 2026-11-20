@@ -8,7 +8,7 @@ Deployment Docker/Coolify: lihat [DEPLOYMENT.md](DEPLOYMENT.md). Database produk
 
 Tanda tangan bengkel diatur per pesanan melalui **Edit servis → Pengerjaan & biaya**. Toggle muncul untuk status **Selesai / Sudah Diambil**, default aktif. Simpan perubahan untuk menerapkannya pada invoice dan cetak. Gambar asli disimpan privat di `config/assets/faeyza-ttd.png`; konfigurasi berada pada `invoice_signature` di branding.php. File tidak disajikan langsung melalui URL publik.
 
-Pembaruan database lama: backup dahulu, gunakan akun migrasi yang memiliki CREATE/ALTER/INSERT pada database Faeyza, lalu jalankan `php bin/migrate.php --only-db=NAMA_DATABASE`. Target harus sama dengan DB_NAME. Migrasi v2 menambahkan `show_workshop_signature` (default 1); v3 menambahkan penanda penghapusan konsumen/sparepart, versi sesi pengguna, dan audit record_events. Tidak ada penghapusan data lama. `bin/setup.php` menjalankan migrasi untuk instalasi baru maupun skema lama. Akun runtime tetap hanya SELECT/INSERT/UPDATE.
+Pembaruan database lama: backup dahulu, gunakan akun migrasi yang memiliki CREATE/ALTER/INSERT pada database Faeyza, lalu jalankan `php bin/migrate.php --only-db=NAMA_DATABASE`. Target harus sama dengan DB_NAME. Migrasi v2 menambahkan `show_workshop_signature` (default 1); v3 menambahkan penanda penghapusan konsumen/sparepart, versi sesi pengguna, dan audit record_events; v4 menambahkan `spare_parts.part_type`. Jalankan migrasi sebelum merilis kode baru. Tidak ada penghapusan data lama. `bin/setup.php` menjalankan migrasi untuk instalasi baru maupun skema lama. Akun runtime tetap hanya SELECT/INSERT/UPDATE.
 
 **Produksi aktif:** https://faeyza.dirgasatya.id — [repository privat GitHub](https://github.com/masmutdevofficial/faeyza-elektronik-service). Hasil deployment dan pemeriksaan aktual tersedia di [DEPLOYMENT_REPORT.md](DEPLOYMENT_REPORT.md). Admin produksi dibuat secara terpisah dengan persetujuan pemilik; kredensial privat tidak tersimpan dalam repository. Coolify disetel untuk deployment manual.
 
@@ -79,7 +79,7 @@ Biaya NULL tampil **-**; biaya 0 tampil **Rp0**; 150000 tampil **Rp150.000**. Ha
 
 ## Aturan stok dan transaksi
 
-Stok awal sparepart baru 0. Catat penerimaan melalui Stok masuk (jumlah positif dan keterangan). Pengiriman ulang token penerimaan sama tidak menambah dua kali. Edit metadata tidak mengubah jumlah stok.
+Stok awal sparepart baru 0. Catat penerimaan melalui **Catat stok masuk** (jumlah positif dan **Tipe sparepart** yang diketik admin). Tipe tersimpan pada sparepart, otomatis terisi pada penerimaan berikutnya, dan dapat diubah melalui **Edit sparepart**. Pengiriman ulang token penerimaan sama tidak menambah dua kali. Edit tipe tidak mengubah jumlah stok; histori menyimpan tipe saat penerimaan. Pencarian mendukung SKU, nama, dan tipe. Lihat [panduan tipe sparepart dan migrasi v4](docs/TIPE-SPAREPART.md).
 
 Untuk koreksi jumlah tersedia, buka detail sparepart → **Sesuaikan stok**. Isi jumlah akhir yang benar dan alasan wajib; 0 berarti stok habis. Perubahan mencatat selisih/saldo/admin dalam stock_movements secara atomik, menolak form stale, dan memakai token idempoten agar retry tidak menggandakan koreksi. Pemakaian servis tetap tersimpan; pembatalan tetap mengembalikan barang yang dipakai. Tautan koreksi tersedia juga di Edit sparepart.
 

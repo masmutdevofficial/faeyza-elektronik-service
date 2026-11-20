@@ -213,7 +213,7 @@ if ($page==='parts') {
     $p=max(1,min(100000,(int)(is_scalar($_GET['p']??1)?($_GET['p']??1):1)));
     $low=($_GET['low']??'')==='1';
     $deleted=($_GET['deleted']??'')==='1';
-    $parts=Database::all('SELECT * FROM spare_parts WHERE (sku LIKE ? OR name LIKE ?) AND deleted_at IS '.($deleted?'NOT NULL':'NULL').($low?' AND stock<=minimum_stock':'').' ORDER BY id DESC LIMIT 20 OFFSET '.(($p-1)*20),['%'.$q.'%','%'.$q.'%']);
+    $parts=Database::all('SELECT * FROM spare_parts WHERE (sku LIKE ? OR name LIKE ? OR part_type LIKE ?) AND deleted_at IS '.($deleted?'NOT NULL':'NULL').($low?' AND stock<=minimum_stock':'').' ORDER BY id DESC LIMIT 20 OFFSET '.(($p-1)*20),['%'.$q.'%','%'.$q.'%','%'.$q.'%']);
     render('parts',compact('parts','q','p','low','deleted')); return;
 }
 if (in_array($page,['part','part-new','part-edit'],true)) {
@@ -229,7 +229,10 @@ if (in_array($page,['part','part-new','part-edit'],true)) {
                     Inventory::adjust($id,Validate::integer($_POST['stock_quantity']??''),Validate::integer($_POST['stock_revision']??'',1),Validate::text($_POST,'stock_reason',180),Validate::key($_POST['stock_key']??''),$user);
                     flash('Penyesuaian stok berhasil dicatat.');
                 } elseif ($stockAction==='receive') {
-                    Inventory::receive($id,Validate::integer($_POST['quantity']??'',1),Validate::text($_POST,'reason',180),Validate::key($_POST['operation_key']??''),$user);
+                    // Older open forms may still send reason; never convert old supplier notes into a part type.
+                    $partType=array_key_exists('part_type',$_POST)?Validate::text($_POST,'part_type',180):null;
+                    $receiptReason=$partType??Validate::text($_POST,'reason',180);
+                    Inventory::receive($id,Validate::integer($_POST['quantity']??'',1),$receiptReason,Validate::key($_POST['operation_key']??''),$user,$partType);
                     flash('Stok masuk berhasil dicatat.');
                 } else throw new ValidationException('Tindakan stok tidak valid.');
                 redirect('part',['id'=>$id]);
@@ -241,6 +244,7 @@ if (in_array($page,['part','part-new','part-edit'],true)) {
         $p=max(1,min(100000,(int)(is_scalar($_GET['p']??1)?($_GET['p']??1):1)));
         $movements=Database::all('SELECT m.*,s.invoice_number,u.phone actor_phone FROM stock_movements m LEFT JOIN service_orders s ON s.id=m.service_order_id JOIN users u ON u.id=m.actor_id WHERE m.spare_part_id=? ORDER BY m.id DESC LIMIT 20 OFFSET '.(($p-1)*20),[$id]);
         $data['operation_key']??=token(); $data['stock_key']??=token();
+        $data['part_type']??=$part['part_type'];
         $data['stock_revision']??=$part['revision']; $data['stock_quantity']??=$part['stock'];
         render('part',compact('part','movements','data','error','p')); return;
     }

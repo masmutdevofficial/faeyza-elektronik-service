@@ -8,5 +8,5 @@ try {
     foreach($argv as $arg) if(str_starts_with($arg,'--only-db='))$target=substr($arg,10);
     if (!$target || $target!==getenv('DB_NAME')) throw new RuntimeException('Gunakan --only-db=NAMA_DB yang cocok dengan konfigurasi.');
     if (getenv('APP_ENV')==='testing' && !str_ends_with($target,'_test')) throw new RuntimeException('Database testing harus berakhiran _test.');
-    Migrations::apply(); echo 'Migrasi v3 siap: '.$target.PHP_EOL;
+    Migrations::apply(); echo 'Migrasi v4 siap: '.$target.PHP_EOL;
 } catch(Throwable $e) { fwrite(STDERR,'Migrasi gagal. Periksa target database dan hak ALTER/INSERT akun migrasi.'.PHP_EOL); exit(1); }

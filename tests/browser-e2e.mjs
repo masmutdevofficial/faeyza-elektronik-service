@@ -83,7 +83,7 @@ export async function runBrowserE2E({tab,viewport,fixture,save,base='http://127.
     check('13 status Dalam Pengerjaan',(await text('.badge'))==='Dalam Pengerjaan');
     await goto('part-new');const sku='E2E-'+String(Date.now()).slice(-8);await fill('sku',sku);await fill('name','Kapasitor TV Simulasi');await fill('minimum_stock','3');await fill('purchase_price','5000');await fill('sale_price','10000');await click('Simpan sparepart');
     check('13 sparepart baru stok 0',(await text('.inventory-balance')).startsWith('0'));const partId=new URL(await currentUrl()).searchParams.get('id');
-    await fill('quantity','10');await fill('reason','Pembelian simulasi E2E');await click('Tambah stok');check('13 stok masuk 10',(await text('.inventory-balance')).startsWith('10'));
+    await fill('quantity','10');await fill('part_type','470 uF 25 V');await click('Tambah stok');check('13 stok masuk 10',(await text('.inventory-balance')).startsWith('10'));
     await goto('order&id='+orderId);await tab.playwright.locator('select[name="part_id"]').selectOption(partId);await tab.playwright.locator('.inline-form input[name="quantity"]').fill('2');await click('Gunakan sparepart');
     check('13 penggunaan 2 stok menjadi 8',(await text('.allocation-list')).includes('Tersedia 8 pcs'));await tab.reload();check('13 refresh stok tetap 8',(await text('.allocation-list')).includes('Tersedia 8 pcs'));
     await link('Edit servis');const day=await tab.playwright.locator('[name="received_date"]').getAttribute('value');
@@ -98,7 +98,7 @@ export async function runBrowserE2E({tab,viewport,fixture,save,base='http://127.
     await goto('service-edit&id='+orderId);check('14 pilihan nonaktif bertahan setelah reload',await tab.playwright.evaluate(()=>!document.querySelector('input[type="checkbox"][name="show_workshop_signature"]').checked));
     await tab.playwright.getByRole('switch',{name:'Tampilkan tanda tangan bengkel',exact:true}).check();await click('Simpan perubahan');await goto('invoice&id='+orderId);
     check('14 tanda tangan kembali dan gambar termuat',await tab.playwright.evaluate(()=>document.querySelector('[data-testid="workshop-signature"]')?.naturalWidth>0));await save('invoice-signature-desktop.jpg');
-    await goto('part&id='+partId);check('07 histori stok memuat pembelian dan penggunaan',(await text('tbody')).includes('Pembelian simulasi E2E')&&(await text('tbody')).includes('Penyesuaian penggunaan'));await save('stock-history-desktop.jpg');
+    await goto('part&id='+partId);check('07 histori stok memuat tipe penerimaan dan penggunaan',(await text('tbody')).includes('Stok masuk: Tipe sparepart: 470 uF 25 V')&&(await text('tbody')).includes('Penyesuaian penggunaan'));await save('stock-history-desktop.jpg');
     await click('Keluar');await login(phone);await goto('invoices');await fill('q',invoice);await click('Cari');check('13 konsumen mencari invoice sendiri',(await text('.service-cards')).includes(invoice)&&(await text('.service-cards')).includes('Selesai'));
     await link('Lihat invoice '+invoice);check('13 invoice final Rp150.000',(await text('[data-testid="total-cost"]'))==='Rp150.000');check('13 invoice memuat garansi',(await text('main')).includes(warrantyDate.split('-').reverse().join('/')));check('14 konsumen melihat tanda tangan yang dipilih admin',await tab.playwright.locator('[data-testid="workshop-signature"]').count()===1);await save('invoice-final-desktop.jpg');
     await goto('dashboard');await link('Pengaturan akun');

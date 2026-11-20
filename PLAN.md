@@ -156,3 +156,14 @@ Status deployment: COMPLETE. Kedua container healthy, admin login/logout/login u
 - [x] 402 native + 202 browser + 14 unit JS + 37 instalasi + 14 integritas paket PASS (669). Tidak mengubah produksi atau mengoperasikan komputer klien.
 - [x] ZIP update enam file dan ZIP penuh diuji/disiapkan, panduan pemasangan tanpa migrasi SQL tersedia.
 - [ ] Pemasangan/verifikasi pada hosting klien belum dilakukan; kontrol komputer tetap dihentikan sesuai permintaan.
+
+## Tipe sparepart pada stok masuk dan edit
+
+- [x] Ganti Keterangan / sumber dengan input Tipe sparepart pada Catat stok masuk.
+- [x] Simpan tipe pada sparepart, tampilkan di detail/tambah/edit, dan dukung pencarian tipe.
+- [x] Penerimaan atomik menyimpan stok dan tipe; histori menyimpan snapshot, retry tidak menggandakan stok atau mengembalikan tipe lama.
+- [x] Migrasi v4 additive/idempotent diuji dari skema v3; data lama tetap utuh dan tipe awal kosong.
+- [x] 435 native/domain/HTTP + 202 browser regresi + 21 browser tipe + 14 unit JavaScript PASS (672), 57 PHP lint lulus.
+- [x] UI detail/edit diuji 375/768/1440px; screenshot mobile diperiksa, tidak ada overflow atau error JavaScript.
+- [x] Panduan migrasi CLI/phpMyAdmin dan deployment diperbarui; panduan tipe disertakan oleh pembuat ZIP.
+- [ ] Migrasi v4 dan deployment produksi belum dijalankan pada fase ini. Permintaan saat ini adalah push source ke main.

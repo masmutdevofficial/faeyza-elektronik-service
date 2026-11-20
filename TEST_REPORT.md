@@ -1,5 +1,26 @@
 # Laporan Pengujian — Faeyza Elektronik Service
 
+## Tipe sparepart — 20 November 2026
+
+Implementasi lokal selesai dan siap dipush ke main. Catat stok masuk memakai input Tipe sparepart; nilainya disimpan pada sparepart dan ditampilkan di detail/tambah/edit serta pencarian. Edit tipe tidak mengubah jumlah stok. Penerimaan menyimpan tipe dan stok secara atomik, mencatat snapshot tipe pada histori, dan menolak retry dengan payload berbeda. Retry lama tidak menimpa tipe hasil edit berikutnya. Form lama yang masih mengirim keterangan sumber tetap diterima tanpa mengubah tipe.
+
+Migrasi v4 menambahkan kolom part_type dengan default kosong. Pengujian pada faeyza_test menghapus kolom untuk mensimulasikan skema v3, menjalankan migrasi, lalu membuktikan jumlah stok, nama, dan histori lama tetap sama. Migrasi berulang mempertahankan tipe dan mencatat versi satu kali. Tidak ada penafsiran otomatis keterangan pemasok lama sebagai tipe.
+
+| Suite | Tujuan dan bukti aktual | Hasil |
+| --- | --- | --- |
+| Native/domain/HTTP | `tests/test.ps1 -Php C:\project\bengkel-runtime\php\php.exe`; part-type-integration-output.txt, integration-results.json; upgrade v3/v4, Unicode, validasi/CSRF/role/XSS, snapshot, retry, rollback audit dan dua penerimaan bersamaan | 435 PASS, 0 FAIL |
+| Browser regresi | `node tests/summary-stock-ui.mjs`; part-type-regression-output.txt dan summary-stock-*-results.json; ringkasan/hapus/restore, koreksi stok, bisnis 10→8, invoice, status cepat dan filter | 202 PASS, 0 FAIL (28 + 124 + 29 + 21) |
+| Browser tipe | `node tests/part-type-ui.mjs`; part-type-browser-output.txt, part-type-browser-results.json; tambah, penerimaan, refresh, edit tipe, histori, pencarian dan 375/768/1440px | 21 PASS, 0 FAIL |
+| Unit JavaScript | `node tests/invoice-filter-js.mjs`; part-type-js-output.txt | 14 PASS, 0 FAIL |
+
+Total fase ini **672 PASS, 0 FAIL, 0 BLOCKED**. Sebanyak 57 file PHP lulus lint; script browser baru lulus node --check dan pembuat paket lulus parsing Python. Migrasi CLI pada faeyza_test berhasil diulang dan `bin/doctor.php` melaporkan Sparepart type schema OK. Log PHP QA tidak memuat warning/fatal/parse error. Bukti visual part-type-mobile.jpg diperiksa: input tipe dan tombol Tambah stok terbaca pada 375px tanpa overflow. Pengujian memakai Playwright headless dengan profil sementara dan server loopback; tidak mengoperasikan komputer klien atau browser pengguna.
+
+Temuan selama testing: tes bisnis masih memeriksa teks pembelian lama; ekspektasi diperbarui agar memeriksa snapshot tipe penerimaan. Locator label pada tes baru awalnya memakai exact match yang tidak mencakup tanda wajib `*`; locator diperbaiki dan suite diulang hingga seluruhnya PASS. Tidak ada kegagalan aplikasi yang tersisa pada pemeriksaan ini.
+
+Source, migrasi dan panduan disiapkan untuk push. **Belum ada migrasi atau redeploy produksi**, dan ZIP lama tidak dibangun ulang pada fase ini. Rilis website memerlukan backup database Faeyza, migrasi v4 menggunakan akun migrasi, doctor, lalu redeploy resource Faeyza sesuai DEPLOYMENT.md dan docs/TIPE-SPAREPART.md. Pengujian manual Apache/XAMPP/panel hosting dan dialog cetak Android fisik dari fase sebelumnya tidak dijalankan ulang atau dihitung sebagai PASS pada perubahan ini.
+
+## Riwayat pengujian sebelumnya
+
 Tanggal: 17 November 2026, Asia/Jakarta. **PROJECT STATUS: COMPLETE untuk pemeriksaan lokal.**
 
 Semua 13 kelompok penerimaan memiliki bukti pengujian aktual. Regresi terbaru setelah penerapan logo dan referensi nota: **188 assertion PASS, 0 FAIL, 0 BLOCKED** (111 native/HTTP + 53 browser + 24 print/PDF). Lint 32 file PHP lulus pada pengulangan ini; tiga file JavaScript juga telah lulus pada pengujian sebelumnya. Tidak ada error PHP aplikasi tercatat pada akhir pemeriksaan.

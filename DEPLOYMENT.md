@@ -30,6 +30,8 @@ Masukkan password unik minimal 6 karakter melalui stdin privat ketika diminta. J
 
 ## Verifikasi dan pemeliharaan
 
+Migrasi v4 menambahkan `spare_parts.part_type` (teks maksimum 180 karakter, nilai awal kosong untuk data lama). Sebelum merilis kode yang memakai tipe sparepart, backup privat **database Faeyza saja**, lalu jalankan `php bin/migrate.php --only-db=faeyza_service` memakai akun migrasi Faeyza. Target harus sama dengan DB_NAME; jangan mengubah database aplikasi lain atau memberi ALTER kepada akun runtime. Jalankan `php bin/doctor.php` dengan akun runtime setelah migrasi, lalu redeploy resource Faeyza. Stok, SKU, pemakaian, dan histori lama dipertahankan; keterangan pemasok lama tidak diubah menjadi tipe. Prosedur shared hosting dan phpMyAdmin ada di [docs/TIPE-SPAREPART.md](docs/TIPE-SPAREPART.md).
+
 Migrasi v3 menambahkan penanda penghapusan konsumen/sparepart, versi sesi pengguna, dan tabel audit record_events. Pada volume lama, buat backup privat khusus faeyza_service, lalu jalankan `php bin/migrate.php --only-db=faeyza_service` dengan akun migrasi Faeyza sebelum merilis kode v3. Migrasi additive/idempotent; tidak menghapus atau mengubah baris transaksi lama. Jangan memberikan CREATE/ALTER/DELETE kepada user runtime. Database baru langsung memakai schema.sql terbaru. `php bin/doctor.php` memeriksa seluruh kolom dan tabel baru.
 
 Rollback aplikasi setelah v3 tidak memerlukan penghapusan kolom/tabel. Namun, versi aplikasi sebelum v3 tidak memahami status Dihapus; jangan mengaktifkannya kembali setelah ada penghapusan tanpa meninjau akses akun yang dinonaktifkan. Simpan backup privat dan gunakan perbaikan maju bila memungkinkan.

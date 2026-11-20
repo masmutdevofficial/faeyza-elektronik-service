@@ -16,6 +16,9 @@ try {
         RecordDeletion::change('part',(int)$part,true,$actor); echo json_encode(['ok'=>true]);
     } elseif($mode==='receive-part') {
         Inventory::receive((int)$part,(int)$target,'Penerimaan race',token(),$actor); echo json_encode(['ok'=>true]);
+    } elseif($mode==='receive-typed') {
+        $receipt=json_decode($target,true,512,JSON_THROW_ON_ERROR);
+        Inventory::receive((int)$part,(int)$receipt['quantity'],$receipt['type'],$receipt['key'],$actor,$receipt['type']); echo json_encode(['ok'=>true]);
     } elseif($mode==='adjust-part') {
         $adjust=json_decode($target,true,512,JSON_THROW_ON_ERROR);
         Inventory::adjust((int)$part,(int)$adjust['quantity'],(int)$order,'Koreksi race',$adjust['key'],$actor); echo json_encode(['ok'=>true]);

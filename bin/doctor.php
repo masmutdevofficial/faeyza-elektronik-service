@@ -14,5 +14,6 @@ try {
     Database::one('SELECT show_workshop_signature FROM service_orders LIMIT 1'); echo 'Workshop signature preference OK'.PHP_EOL;
     foreach(['customers','spare_parts'] as $table) Database::one('SELECT deleted_at,deleted_by FROM '.$table.' LIMIT 1');
     Database::one('SELECT session_version FROM users LIMIT 1'); Database::one('SELECT id FROM record_events LIMIT 1'); echo 'Recoverable deletion schema OK'.PHP_EOL;
+    Database::one('SELECT part_type FROM spare_parts LIMIT 1'); echo 'Sparepart type schema OK'.PHP_EOL;
 }catch(Throwable $e){$ok=false;echo 'DB FAIL: periksa konfigurasi dan jalankan migrasi.'.PHP_EOL;}
 echo 'Timezone '.date_default_timezone_get().PHP_EOL;exit($ok?0:1);

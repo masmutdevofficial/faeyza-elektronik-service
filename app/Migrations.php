@@ -19,6 +19,9 @@ final class Migrations {
             }
             Database::connection()->query(file_get_contents(ROOT.'/database/migrations/003_record_events.sql'));
             Database::query('INSERT IGNORE INTO schema_migrations(version) VALUES (?)',[3]);
+            $partType=Database::one('SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=? AND COLUMN_NAME=?',['spare_parts','part_type']);
+            if (!$partType) Database::connection()->query(file_get_contents(ROOT.'/database/migrations/004_part_type.sql'));
+            Database::query('INSERT IGNORE INTO schema_migrations(version) VALUES (?)',[4]);
         } finally { Database::query('SELECT RELEASE_LOCK(?)',[$lock]); }
     }
 }

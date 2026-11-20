@@ -1,0 +1,1 @@
+ALTER TABLE spare_parts ADD COLUMN part_type VARCHAR(180) NOT NULL DEFAULT '' AFTER name;

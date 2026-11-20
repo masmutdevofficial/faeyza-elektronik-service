@@ -2,7 +2,9 @@
 
 Tanggal pembaruan: 20 November 2026. Paket berisi source aplikasi, skema kosong, aset logo/tanda tangan, lisensi MDI, panduan PDF dan panduan teks. Tidak ada akun/password bawaan, database pelanggan, `.env`, sesi, log atau riwayat Git. Versi dasar source dan checksum tiap file tercatat di MANIFEST.json.
 
-Pembaruan ringkasan konsumen dihapus dan koreksi stok: **618 pemeriksaan lokal PASS** (402 native/domain/HTTP, 28 UI fitur, 124 UI bisnis, 29 dialog status, 21 filter/invoice, 14 unit JavaScript). Tampilan diuji 375/768/1440px. Skenario mencakup semua konsumen dihapus menghasilkan ringkasan nol, pemulihan, invoice historis, stok nol, rollback audit, formulir stale, retry dan race stok. Panduan pemasangan pembaruan tersedia pada PERBAIKAN-RINGKASAN-STOK.md. Tidak ada migrasi skema baru.
+Pembaruan source terbaru untuk tipe sparepart: **672 pemeriksaan lokal PASS** (435 native/domain/HTTP, 202 browser regresi, 21 browser tipe dan 14 unit JavaScript), 0 FAIL. Detail/edit diuji 375/768/1440px. Database lama memerlukan **migrasi v4 sebelum rilis kode**; lihat TIPE-SPAREPART.md. Jumlah ini menguji source terbaru, bukan bukti bahwa ZIP lama telah dibangun ulang atau produksi sudah diperbarui.
+
+Pembaruan sebelumnya untuk ringkasan konsumen dihapus dan koreksi stok: **618 pemeriksaan lokal PASS** (402 native/domain/HTTP, 28 UI fitur, 124 UI bisnis, 29 dialog status, 21 filter/invoice, 14 unit JavaScript). Tampilan diuji 375/768/1440px. Skenario mencakup semua konsumen dihapus menghasilkan ringkasan nol, pemulihan, invoice historis, stok nol, rollback audit, formulir stale, retry dan race stok. Panduan pemasangan pembaruan tersebut tersedia pada PERBAIKAN-RINGKASAN-STOK.md; patch lama itu tidak memuat fitur tipe sparepart atau migrasi v4.
 
 ## Pemeriksaan yang dijalankan
 
