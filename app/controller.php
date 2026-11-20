@@ -81,9 +81,7 @@ if (in_array($page,['customer-delete','customer-restore','part-delete','part-res
 }
 if ($page==='dashboard') {
     if ($method!=='GET') abort_page(405);
-    $filter=$user['role']==='admin'?'':' JOIN customers c ON c.id=s.customer_id WHERE c.user_id=?';
-    $params=$user['role']==='admin'?[]:[$user['id']];
-    $stats=Database::one("SELECT COUNT(*) total,COALESCE(SUM(status='Menunggu Konfirmasi'),0) waiting,COALESCE(SUM(status IN ('Menunggu Konfirmasi','Diterima','Dalam Pengerjaan','Menunggu Sparepart')),0) working,COALESCE(SUM(status IN ('Selesai','Sudah Diambil')),0) done FROM service_orders s".$filter,$params);
+    $stats=Orders::summary($user);
     $customers= $user['role']==='admin' ? Database::one('SELECT COUNT(*) n FROM customers WHERE deleted_at IS NULL')['n'] : null;
     $low= $user['role']==='admin' ? Database::one('SELECT COUNT(*) n FROM spare_parts WHERE stock<=minimum_stock AND deleted_at IS NULL')['n'] : null;
     $recent=array_slice(Orders::listing($user),0,6);
@@ -94,7 +92,7 @@ if (in_array($page,['orders','invoices'],true)) {
     try { $q=Validate::text($_GET,'q',150,false); $status=Validate::text($_GET,'status',40,false); } catch(ValidationException) { abort_page(400); }
     if (!Orders::validStatusFilter($status)) abort_page(400);
     $p=max(1,min(100000,(int)(is_scalar($_GET['p']??1)?($_GET['p']??1):1)));
-    $orders=Orders::listing($user,$q,$status?:null,$p);
+    $orders=Orders::listing($user,$q,$status?:null,$p,$page==='invoices');
     render('orders',compact('orders','page','q','status','p')); return;
 }
 if (in_array($page,['order','invoice','success'],true)) {
@@ -226,8 +224,15 @@ if (in_array($page,['part','part-new','part-edit'],true)) {
     if ($method==='POST') {
         try {
             if ($page==='part') {
-                Inventory::receive($id,Validate::integer($_POST['quantity']??'',1),Validate::text($_POST,'reason',180),Validate::key($_POST['operation_key']??''),$user);
-                flash('Stok masuk berhasil dicatat.'); redirect('part',['id'=>$id]);
+                $stockAction=Validate::text($_POST,'action',20,false)?:'receive';
+                if ($stockAction==='adjust') {
+                    Inventory::adjust($id,Validate::integer($_POST['stock_quantity']??''),Validate::integer($_POST['stock_revision']??'',1),Validate::text($_POST,'stock_reason',180),Validate::key($_POST['stock_key']??''),$user);
+                    flash('Penyesuaian stok berhasil dicatat.');
+                } elseif ($stockAction==='receive') {
+                    Inventory::receive($id,Validate::integer($_POST['quantity']??'',1),Validate::text($_POST,'reason',180),Validate::key($_POST['operation_key']??''),$user);
+                    flash('Stok masuk berhasil dicatat.');
+                } else throw new ValidationException('Tindakan stok tidak valid.');
+                redirect('part',['id'=>$id]);
             }
             $saved=Inventory::save($editing?$id:null,$_POST,$user); flash('Data sparepart berhasil disimpan.'); redirect('part',['id'=>$saved]);
         } catch(ValidationException $e) { $error=$e->getMessage(); http_response_code(422); }
@@ -235,8 +240,10 @@ if (in_array($page,['part','part-new','part-edit'],true)) {
     if ($page==='part') {
         $p=max(1,min(100000,(int)(is_scalar($_GET['p']??1)?($_GET['p']??1):1)));
         $movements=Database::all('SELECT m.*,s.invoice_number,u.phone actor_phone FROM stock_movements m LEFT JOIN service_orders s ON s.id=m.service_order_id JOIN users u ON u.id=m.actor_id WHERE m.spare_part_id=? ORDER BY m.id DESC LIMIT 20 OFFSET '.(($p-1)*20),[$id]);
-        $data['operation_key']??=token(); render('part',compact('part','movements','data','error','p')); return;
+        $data['operation_key']??=token(); $data['stock_key']??=token();
+        $data['stock_revision']??=$part['revision']; $data['stock_quantity']??=$part['stock'];
+        render('part',compact('part','movements','data','error','p')); return;
     }
-    render('part-form',compact('data','editing','error','id')); return;
+    render('part-form',compact('data','editing','error','id','part')); return;
 }
 abort_page(404);

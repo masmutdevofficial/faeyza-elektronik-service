@@ -1,0 +1,4 @@
+<?php
+declare(strict_types=1);
+// public_html/index.php; the complete application lives in ../faeyza.
+require dirname(__DIR__).'/faeyza/public/index.php';

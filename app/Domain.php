@@ -254,9 +254,15 @@ final class Orders {
             Database::query('UPDATE service_orders SET status=?,completed_date=?,warranty_date=?,revision=revision+1 WHERE id=?',[...array_values($fields),$id]);
         });
     }
-    public static function listing(array $actor,string $query='',?string $status=null,int $page=1): array {
+    public static function summary(array $actor): array {
+        $where='c.deleted_at IS NULL'; $params=[];
+        if ($actor['role']!=='admin') { $where.=' AND c.user_id=?'; $params[]=$actor['id']; }
+        return Database::one("SELECT COUNT(*) total,COALESCE(SUM(s.status='Menunggu Konfirmasi'),0) waiting,COALESCE(SUM(s.status IN ('Menunggu Konfirmasi','Diterima','Dalam Pengerjaan','Menunggu Sparepart')),0) working,COALESCE(SUM(s.status IN ('Selesai','Sudah Diambil')),0) done FROM service_orders s JOIN customers c ON c.id=s.customer_id WHERE ".$where,$params);
+    }
+    public static function listing(array $actor,string $query='',?string $status=null,int $page=1,bool $includeArchived=false): array {
         $where=[]; $params=[];
         if ($actor['role']!=='admin') { $where[]='c.user_id=? AND c.deleted_at IS NULL'; $params[]=$actor['id']; }
+        elseif (!$includeArchived) $where[]='c.deleted_at IS NULL';
         if ($query!=='') {
             $search='%'.$query.'%'; $phone=$query;
             try { $phone=Validate::phone($query); } catch(ValidationException) {}
@@ -313,6 +319,27 @@ final class Inventory {
             Database::query('UPDATE spare_parts SET stock=?,revision=revision+1 WHERE id=?',[$balance,$partId]);
             Database::query('INSERT INTO stock_movements(spare_part_id,actor_id,delta,balance_after,reason,operation_key) VALUES (?,?,?,?,?,?)',[$partId,$actor['id'],$quantity,$balance,'Stok masuk: '.$reason,$key]);
         });
+    }
+    public static function adjust(int $partId,int $quantity,int $revision,string $reason,string $key,array $actor): void {
+        Auth::admin($actor); Validate::integer($quantity); Validate::integer($revision,1); Validate::key($key);
+        $reason=Validate::text(['reason'=>$reason],'reason',180);
+        try { Database::tx(function() use($partId,$quantity,$revision,$reason,$key,$actor) {
+            $part=Database::one('SELECT * FROM spare_parts WHERE id=? FOR UPDATE',[$partId]);
+            if (!$part) throw new ValidationException('Sparepart tidak ditemukan.');
+            if ($part['deleted_at']!==null) throw new ValidationException('Pulihkan sparepart sebelum menyesuaikan stok.');
+            $previous=Database::one('SELECT * FROM stock_movements WHERE operation_key=?',[$key]);
+            $description='Penyesuaian stok: '.$reason;
+            if ($previous) {
+                $previousReason=$description.' ('.((int)$previous['balance_after']-(int)$previous['delta']).' → '.$quantity.')';
+                if ((int)$previous['spare_part_id']!==$partId || (int)$previous['actor_id']!==(int)$actor['id'] || $previous['service_order_id']!==null || (int)$previous['balance_after']!==$quantity || $previous['reason']!==$previousReason) throw new ValidationException('Permintaan stok tidak sesuai. Muat ulang halaman.');
+                return;
+            }
+            if ((int)$part['revision']!==$revision) throw new ValidationException('Stok atau data sparepart sudah berubah. Muat ulang halaman sebelum menyesuaikan stok.');
+            $old=(int)$part['stock']; $delta=$quantity-$old;
+            if (!$delta) throw new ValidationException('Stok baru masih sama dengan stok tersedia.');
+            Database::query('UPDATE spare_parts SET stock=?,revision=revision+1 WHERE id=?',[$quantity,$partId]);
+            Database::query('INSERT INTO stock_movements(spare_part_id,actor_id,delta,balance_after,reason,operation_key) VALUES (?,?,?,?,?,?)',[$partId,$actor['id'],$delta,$quantity,$description.' ('.$old.' → '.$quantity.')',$key]);
+        }); } catch(mysqli_sql_exception $e) { if ($e->getCode()===1062) throw new ValidationException('Permintaan stok sudah digunakan. Muat ulang halaman.'); throw $e; }
     }
     public static function allocate(int $orderId,int $partId,int $quantity,int $expected,array $actor): void {
         Auth::admin($actor); Validate::integer($quantity); Validate::integer($expected);

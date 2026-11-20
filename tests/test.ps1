@@ -4,7 +4,7 @@ $projectRoot=(Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $env:APP_ENV='testing';$env:TEST_BASE_URL=$BaseUrl
 Push-Location $projectRoot
 try {
- $phpFiles=Get-ChildItem -LiteralPath $projectRoot -Recurse -File -Filter *.php
+ $phpFiles=@('app','bin','config','public','views','tests') | ForEach-Object { Get-ChildItem -LiteralPath (Join-Path $projectRoot $_) -Recurse -File -Filter *.php } | Where-Object { -not $_.FullName.StartsWith((Join-Path $projectRoot 'tests\artifacts\'),[StringComparison]::OrdinalIgnoreCase) }
  foreach($file in $phpFiles){& $Php -l $file.FullName;if($LASTEXITCODE){throw "Lint gagal: $($file.FullName)"}}
  & $Php bin/setup.php
  if($LASTEXITCODE){throw 'Migrasi testing gagal'}

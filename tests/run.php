@@ -262,6 +262,7 @@ try {
     require __DIR__.'/quick-status.php';
     require __DIR__.'/invoice-filter.php';
     require __DIR__.'/dashboard-groups.php';
+    require __DIR__.'/summary-stock-adjustment.php';
     // Fixture untuk browser: hanya testing, password acak tidak ditulis ke laporan.
     Database::query('DELETE FROM login_limits');
     file_put_contents(__DIR__.'/local-fixtures.json',json_encode(['password'=>$password,'admin_phone'=>'08170002466','customer_phone'=>'081822233344','other_phone'=>'081911122233','own_order'=>$webOrder,'other_order'=>$ob,'part'=>$part,'own_device'=>$deviceExpected,'device_edge_order'=>$deviceEdgeId,'device_edge_expected'=>$deviceEdgeExpected],JSON_PRETTY_PRINT));

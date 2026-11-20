@@ -2,6 +2,8 @@
 
 Aplikasi manajemen penerimaan/perbaikan elektronik, PHP native 8.2+, MySQLi prepared statements, MySQL 8 atau MariaDB, HTML/CSS/JavaScript. Bahasa Indonesia, zona Asia/Jakarta, IDR. Tidak memerlukan Node.js, Composer, framework, WhatsApp API atau PDF library untuk produksi.
 
+Panduan klien untuk XAMPP dan shared hosting tersedia di [docs/PANDUAN-INSTALASI.md](docs/PANDUAN-INSTALASI.md). PDF dan ZIP bersih dibuat dengan `tools/render-installation-guide.py` (ReportLab untuk development) dan `tools/build-client-package.py`. Paket tidak menyertakan konfigurasi privat, database pelanggan, seed, sesi, log, atau riwayat Git. Helper CLI `bin/admin-sql.php` menghasilkan SQL admin dengan hash password untuk hosting tanpa terminal; prosedurnya ada dalam panduan.
+
 Deployment Docker/Coolify: lihat [DEPLOYMENT.md](DEPLOYMENT.md). Database produksi memakai container dan volume khusus Faeyza, terpisah dari database lokal maupun aplikasi lain.
 
 Tanda tangan bengkel diatur per pesanan melalui **Edit servis → Pengerjaan & biaya**. Toggle muncul untuk status **Selesai / Sudah Diambil**, default aktif. Simpan perubahan untuk menerapkannya pada invoice dan cetak. Gambar asli disimpan privat di `config/assets/faeyza-ttd.png`; konfigurasi berada pada `invoice_signature` di branding.php. File tidak disajikan langsung melalui URL publik.
@@ -79,6 +81,10 @@ Biaya NULL tampil **-**; biaya 0 tampil **Rp0**; 150000 tampil **Rp150.000**. Ha
 
 Stok awal sparepart baru 0. Catat penerimaan melalui Stok masuk (jumlah positif dan keterangan). Pengiriman ulang token penerimaan sama tidak menambah dua kali. Edit metadata tidak mengubah jumlah stok.
 
+Untuk koreksi jumlah tersedia, buka detail sparepart → **Sesuaikan stok**. Isi jumlah akhir yang benar dan alasan wajib; 0 berarti stok habis. Perubahan mencatat selisih/saldo/admin dalam stock_movements secara atomik, menolak form stale, dan memakai token idempoten agar retry tidak menggandakan koreksi. Pemakaian servis tetap tersimpan; pembatalan tetap mengembalikan barang yang dipakai. Tautan koreksi tersedia juga di Edit sparepart.
+
+Ringkasan dan daftar servis aktif hanya menghitung konsumen yang belum dihapus. Menghapus semua konsumen membuat seluruh kartu servis nol; pemulihan mengembalikan hitungannya. Admin tetap dapat mencari invoice historis dari menu Invoice dan membuka detailnya. Penghapusan konsumen tidak otomatis membatalkan pesanan atau memulihkan alokasi stok.
+
 Alokasi di detail servis adalah **jumlah akhir**: 2→3 mengurangi tambahan 1; 3→1 mengembalikan 2; jumlah 0 mengembalikan seluruh alokasi. Baris penggunaan tetap tersimpan dengan kuantitas 0. Pembatalan servis mengembalikan seluruh alokasi aktif dalam satu transaksi. Pembatalan ulang tidak menggandakan pengembalian. Setelah dibuka kembali, admin harus mengalokasikan ulang secara eksplisit. Tidak ada penghapusan histori. Stok berkurang ketika alokasi disimpan, bukan saat membuka halaman atau mengganti status biasa.
 
 Transaksi mengunci row servis kemudian row sparepart, memvalidasi saldo, mencatat penggunaan dan stock_movements secara atomik. Penyimpanan gagal di-rollback. Edit servis dan metadata sparepart memiliki revision untuk menolak penyimpanan formulir kedaluwarsa. Penggunaan memiliki expected quantity; retry kuantitas sama idempotent. Deadlock/lock timeout dicoba ulang secara terbatas. Invoice memakai invoice_sequences per tanggal dengan SELECT FOR UPDATE dan unique constraints.
@@ -130,7 +136,7 @@ Node/Playwright hanya untuk development. Jalankan sesudah integration tests agar
 ## Shared hosting
 
 1. Siapkan PHP 8.2+, mysqli/mysqlnd, mbstring, InnoDB dan HTTPS. Buat database dan user melalui panel hosting; nama DB mungkin berprefix akun hosting.
-2. Simpan app/config/database/bin/storage dan `.env` **di luar public_html**. Isi public_html dengan isi folder public. Sesuaikan baris require di `public_html/index.php` agar menunjuk bootstrap aplikasi di luar public_html. Pada hosting yang mendukung document root khusus, arahkan langsung ke folder public sehingga tidak perlu mengubah bootstrap path.
+2. Simpan aplikasi lengkap (termasuk folder public) dan `.env` **di luar public_html**. Salin isi folder public ke public_html, lalu gunakan wrapper `deploy/shared-hosting/index.php.example` sebagai public_html/index.php. Folder public asli tetap diperlukan helper ikon/invoice; perubahan aset perlu disinkronkan ke kedua lokasi. Pada hosting yang mendukung document root khusus, arahkan langsung ke folder public sehingga tidak perlu wrapper atau salinan aset.
 3. Jangan unggah tests, artefak, data seed, file local-credentials/local-fixtures, log, sesi, runtime portable atau file administrator DB lokal. Produksi memakai konfigurasi/kredensial baru, APP_ENV=production, SESSION_SECURE=true. Jangan gunakan akun demo di production.
 4. Impor schema.sql ke DB terpilih menggunakan akun migrasi, lalu gunakan user runtime SELECT/INSERT/UPDATE. Bila CLI tidak tersedia, impor melalui panel/phpMyAdmin; jalankan create-admin.php dengan PHP CLI privat dari terminal hosting atau hubungi pengelola hosting. Jangan membuat endpoint setup/admin publik.
 5. Set izin hanya storage/logs dan storage/sessions writable. Pastikan .env/source tidak dapat diunduh. Matikan display_errors pada konfigurasi server juga. Log aplikasi menggunakan kode insiden tanpa kredensial/input SQL.

@@ -137,3 +137,22 @@ Status deployment: COMPLETE. Kedua container healthy, admin login/logout/login u
 - [x] 349 native + 17 browser kelompok + 124 bisnis + 29 dialog + 21 filter/cetak + 14 unit JS PASS (554).
 - [x] Runtime 998a1f0 dipush main, deployment oaifw50yvtjbrsejurrnuwqc Success/29 detik; 79 produksi PASS, health dan doctor OK.
 - [x] Dokumentasi hasil dan cleanup server QA 8081 selesai. Pemeriksaan Android manual tetap dicatat pada fase keluhan cetak.
+
+## Paket klien dan panduan instalasi
+
+- [x] Panduan XAMPP, hosting dengan document root public, public_html tetap, admin pertama, konfigurasi, pembaruan dan uji coba.
+- [x] PDF A4 enam halaman dirender dan diperiksa visual.
+- [x] Helper CLI SQL admin offline untuk hosting tanpa terminal, tanpa password plaintext.
+- [x] ZIP allowlist tanpa .env, data pelanggan, seed, sesi, log, hasil uji privat dan history Git; manifest serta checksum SHA256.
+- [x] 37 pemeriksaan instalasi paket PASS: skema bersih/berulang, admin, pelanggan, servis, invoice, role, public_html dan subfolder.
+- [ ] Uji Apache/XAMPP dan panel hosting sebenarnya di perangkat tujuan (BLOCKED: tidak tersedia pada lingkungan pengemasan).
+
+
+## Ringkasan konsumen dihapus dan penyesuaian stok
+
+- [x] Ringkasan dan daftar servis aktif hanya memakai konsumen aktif; seluruh kartu nol bila semua konsumen dihapus, restore mengembalikan hitungan.
+- [x] Invoice historis tetap tersedia untuk admin; role dan kepemilikan tetap terlindungi.
+- [x] Koreksi jumlah stok termasuk 0 dengan alasan, histori atomik, guard revisi, retry idempoten dan larangan negatif.
+- [x] 402 native + 202 browser + 14 unit JS + 37 instalasi + 14 integritas paket PASS (669). Tidak mengubah produksi atau mengoperasikan komputer klien.
+- [x] ZIP update enam file dan ZIP penuh diuji/disiapkan, panduan pemasangan tanpa migrasi SQL tersedia.
+- [ ] Pemasangan/verifikasi pada hosting klien belum dilakukan; kontrol komputer tetap dihentikan sesuai permintaan.
